@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="bridge.mapper.PaymentMapper">
+
+<!-- 	<select resultType="bridge.dto.PaymentDto" id="paymentList">
+		select
+		payment_idx, clients, producer, deposit, downpayment, total_cost,
+		client_point, usepoint from payment order by payment_idx desc
+	</select>
+	 -->
+
+	<!-- <select resultType="bridge.dto.PaymentDto" id="paymentDetail" parameterType="int">select 
+		payment_idx, clients, producer, deposit, downpayment, total_cost, usepoint 
+		from payment where payment_idx = #{paymentIdx} </select> -->
+
+	<select id="paymentDetail" parameterType="String"
+		resultType="int">
+		select user_point
+		from users
+		where user_id = #{userId}
+	</select>
+	
+	<!-- 결제 내역 기록 -->
+	<insert id="insertPayment">
+		insert into pay_list(user_id1, user_id2,
+		pl_money,pl_date)
+		select clients, producer, downpayment, payment_dt
+		from
+		payment
+		order by payment_idx DESC limit 1
+	</insert>
+
+	<!-- 결제 진행 -->
+	 <insert id="doPayment" parameterType="bridge.dto.PaymentDto">
+		insert
+		into payment
+		(clients, producer, downpayment, total_cost, client_point, usepoint,
+		payment_dt)
+		values
+		(#{clients}, #{producer}, #{downpayment},
+		#{totalCost}, #{clientPoint}, #{usepoint}, now() )
+	</insert> 
+
+	<!-- '보유포인트 - 사용포인트' 값을 유저 포인트에 업데이트 -->
+	<update id="updatePoint" parameterType="HashMap">
+		update users 
+		set
+		user_point = user_point - #{plMoney}
+		where
+		user_id = #{userId}
+	</update>
+
+	<!-- 결제한 금액을 예치금으로 값 기록 -->
+	<!-- <update id="updatePartnerMoney"> UPDATE partner_detail AS d INNER JOIN 
+		payment AS p ON d.user_id1 = p.clients AND d.user_id2 = p.producer INNER 
+		JOIN ( SELECT MAX(payment_idx) AS max_payment_idx FROM payment ) AS t ON 
+		p.payment_idx = t.max_payment_idx SET d.pd_money = d.pd_money + p.downpayment; 
+		</update> -->
+
+<!-- 	<update id="updatePartnerMoney">
+		UPDATE commission AS c
+		INNER JOIN payment AS p
+		ON
+		c.user_id1 = p.clients AND c.user_id2 = p.producer
+		INNER JOIN (
+		SELECT
+		MAX(payment_idx) AS max_payment_idx FROM payment
+		) AS t
+		ON p.payment_idx
+		= t.max_payment_idx
+		SET c.c_money = c.c_money + p.downpayment;
+	</update> -->
+
+
+
+	<!-- 관리자용 결제 리스트 -->
+	<select id="payListAll" resultType="bridge.dto.PayListDto">
+		select * from pay_list
+		order
+		by pl_idx DESC
+	</select>
+	<!-- 거래내역 -->
+	<select id="payListDeal" resultType="bridge.dto.PayListDto">
+		select * from pay_list
+		where
+		user_id2 != "Bridge"
+		order by pl_idx DESC
+	</select>
+	<!-- 충전내역 -->
+	<select id="payListCharge" resultType="bridge.dto.PayListDto">
+		select * from pay_list
+		where user_id2 = "Bridge"
+		order by pl_idx DESC
+	</select>
+
+	<!-- 회원용 결제 내역 -->
+	<select id="payList" parameterType="String"
+		resultType="bridge.dto.PayListDto">
+		select * from pay_list
+		where user_id1 = #{userId} or
+		user_id2 = #{userId}
+		order by pl_idx DESC
+	</select>
+
+	<!-- 회원 거래내역 -->
+	<select id="payDeal" parameterType="String"
+		resultType="bridge.dto.PayListDto">
+		select * from pay_list
+		where
+		user_id2 != "Bridge" and
+		user_id1 = #{userId} or user_id2 = #{userId}
+		order by pl_idx DESC
+	</select>
+
+	<!-- 회원 충전내역 -->
+	<select id="payCharge" parameterType="String"
+		resultType="bridge.dto.PayListDto">
+		select * from pay_list
+		where user_id2 = "Bridge" and
+		user_id1 = #{userId}
+		order by pl_idx DESC
+	</select>
+</mapper>

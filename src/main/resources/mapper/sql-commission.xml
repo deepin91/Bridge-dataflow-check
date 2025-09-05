@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="bridge.mapper.CommissionMapper">
+
+	<select id="getCommissionList"
+		resultType="bridge.dto.CommissionDto">
+		select * from commission
+		where user_id1 = #{userId} and
+		deleted_yn = 0
+		or user_id2 = #{userId} and deleted_yn = 0
+		order by c_idx DESC
+	</select>
+
+	<!-- deleted_yn = 0 -->
+
+	<select id="getProgress" resultType="bridge.dto.CommissionDto">
+		select * from commission
+		where c_idx = #{cIdx} and deleted_yn = 0
+	</select>
+
+	<select id="getCommissionDetail"
+		resultType="bridge.dto.CommissionDetailDto">
+		select * from commission_detail
+		where c_idx = #{cIdx} and
+		deleted_yn = 0
+	</select>
+
+	<insert id="insertCommissionDetail"
+		parameterType="bridge.dto.CommissionDetailDto">
+		insert into commission_detail
+		(cd_comment, cd_date,
+		user_id, c_idx, cd_file)
+		values (#{cdComment}, now(), #{userId},
+		#{cIdx}, #{cdFile})
+	</insert>
+
+	<update id="editCommissionDetail"
+		parameterType="bridge.dto.CommissionDetailDto">
+		update commission_detail
+		set
+		cd_comment = #{cdComment},
+		cd_date = now(),
+		user_id = #{userId},
+		c_idx = #{cIdx},
+		cd_file =
+		#{cdFile}
+		where cd_idx = #{cdIdx}
+	</update>
+
+	<update id="delCommissionDetail" parameterType="int">
+		update
+		commission_detail
+		set deleted_yn = 1
+		where cd_idx = #{cdIdx}
+	</update>
+
+	<update id="delCommissionFile" parameterType="int">
+		update
+		commission_detail
+		set cd_file = NULL
+		where cd_idx = #{cdIdx}
+	</update>
+
+	<update id="commissionEnd" parameterType="int">
+		update commission
+		set
+		progress = 1
+		where c_idx = #{cIdx}
+	</update>
+
+	<insert id="insertCommission"
+		parameterType="bridge.dto.CommissionDto">
+		insert into commission
+		(user_id1, user_id2, c_money)
+		values (#{userId1}, #{userId2}, #{coMoney})
+	</insert>
+
+	<update id="delCommissionList" parameterType="int">
+		update commission
+		set deleted_yn = 1
+		where c_idx = #{cIdx}
+	</update>
+
+	<update id="moneyToUser2"
+		parameterType="bridge.dto.CommissionDto">
+		UPDATE users u, commission c
+		SET u.user_point =
+		u.user_point + c.c_money,
+		c.c_money = 0
+		WHERE u.user_id = c.user_id2
+		and
+		c.c_idx = #{cIdx}
+	</update>
+
+	<insert id="CommissionComment"
+		parameterType="bridge.dto.CommissionCommentDto">
+		insert into commission_comment
+		(user_id, cc_date,
+		cc_contents, cd_idx)
+		values (#{userId}, now(), #{ccContents}, #{cdIdx})
+	</insert>
+
+	<select id="getCommissionComment"
+		resultType="bridge.dto.CommissionCommentDto">
+		select * from commission_comment
+		where cd_idx = #{cdIdx}
+	</select>
+
+	<insert id="insertReview" parameterType="bridge.dto.ReviewDto">
+		insert into user_review
+		( content, user_id)
+		values ( #{content}, #{userId})
+	</insert>
+
+</mapper>

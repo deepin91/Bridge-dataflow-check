@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="bridge.mapper.BridgeMapper">
+
+	<select id="getPorfile" resultType="bridge.dto.UserProfileDto"
+		parameterType="bridge.dto.UserProfileDto">
+		select *
+		from user_profile
+		where user_profile_idx =
+		#{userProfileIdx}
+	</select>
+
+	<select id="getProfileIdx" resultType="int">
+		select
+		max(user_profile_idx) from user_profile
+		where user_id = #{userId}
+	</select>
+
+	<select id="getTaglist" resultType="bridge.dto.TagDto"
+		parameterType="bridge.dto.TagDto">
+		select * from
+		user_tag
+		where user_profile_idx =
+		#{user_profile_idx}
+	</select>
+
+
+	<select id="getReview" resultType="bridge.dto.ReviewDto"
+		parameterType="String">
+		select * from
+		user_review
+		where user_id = #{userId}
+		order by user_review_idx DESC
+	</select>
+
+	<!-- 예치금 포인트에 추가하고 0으로 업데이트 -->
+	<!--<update id="partnerMoney"
+		parameterType="bridge.dto.PartnerDetailCommentDto">
+		UPDATE users u, partner_detail d
+		SET u.user_point =
+		u.user_point + d.pd_money,
+		d.pd_money = 0
+		WHERE u.user_id = d.user_id2
+		and d.pd_idx = #{pdIdx}
+	</update> -->
+
+
+
+</mapper>

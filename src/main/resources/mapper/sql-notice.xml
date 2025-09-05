@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="bridge.mapper.NoticeMapper">
+	<insert id="insertNotice" parameterType="bridge.dto.NoticeDto">
+		insert into notice ( writer, title, contents, created_dt)
+		values (#{writer}, #{title}, #{contents}, now())
+	</insert>
+
+	<select id="noticeList" resultType="bridge.dto.NoticeDto">
+		select *
+		from notice
+		where deleted_yn = 'N'
+		order by notice_idx desc
+	</select>
+
+	<select id="noticeDetail" parameterType="int"
+		resultType="bridge.dto.NoticeDto">
+		select notice_idx, title, contents, writer
+		from notice
+		where notice_idx = #{noticeIdx}
+	</select>
+
+	<update id="updateNotice" parameterType="bridge.dto.NoticeDto">
+		update notice
+		set title= #{title},
+		contents =#{contents},
+		updated_dt= now()
+		where notice_idx = #{noticeIdx}
+	</update>
+
+
+	<delete id="deleteNotice" parameterType="int">
+		update notice
+		set
+		deleted_yn= 1
+		where notice_idx = #{noticeIdx}
+	</delete>
+
+	<select id="getSerchList" parameterType="string"
+		resultType="bridge.dto.NoticeDto">
+		select notice_idx, title, user_id
+		from notice
+		where deleted_yn = 'N'
+		order by notice_idx desc
+	</select>
+
+
+</mapper>

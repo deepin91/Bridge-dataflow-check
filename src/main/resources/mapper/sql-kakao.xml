@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="bridge.mapper.KakaoPayMapper">
+	<insert id ="insertPay" parameterType="bridge.dto.ApproveResponseDto">
+	insert into Kakaopay_list(user_id,tid,partner_order_id,created_at, money)
+	values (#{partner_user_id},#{tid},#{partner_order_id},#{created_at}, #{money})
+	</insert>
+	
+	<insert id="kakaoToList">
+		insert into pay_list(user_id1, pl_money, pl_date)
+		select user_id, money, created_at
+		from kakaopay_list
+		order by kakaopay_idx DESC limit 1
+	</insert>
+</mapper>

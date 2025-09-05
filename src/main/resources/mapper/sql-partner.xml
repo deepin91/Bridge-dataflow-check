@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="bridge.mapper.BridgeMapper">
+
+	<!-- 파트너 구인 목록 -->
+	<select id="openPartnerList"
+		resultType="bridge.dto.ComposerRequestDto">
+		select *
+		from composer_request
+		where deleted_yn = 0
+		order by cr_idx desc
+	</select>
+
+	<!-- 파트너 구인 작성 -->
+	<insert id="insertPartnerWrite" useGeneratedKeys="true"
+		keyProperty="crIdx">
+		insert into composer_request
+		(cr_title, cr_contents,
+		user_id, cr_photo, cr_money, cr_start_date, cr_end_date, created_dt)
+		values
+		(#{crTitle}, #{crContents}, #{userId}, #{crPhoto}, #{crMoney},
+		#{crStartDate}, #{crEndDate}, now())
+	</insert>
+
+	<!-- 파트너 구인 태그 작성 -->
+	<insert id="insertCrtTag">
+		insert into composer_request_tag(crt_tag, cr_idx)
+		values
+		<foreach collection="crtTags" item="crtTags" separator=",">
+			(#{crtTags}, #{crIdx})
+		</foreach>
+	</insert>
+
+	<!-- 파트너 구인 태그 리스트 조회 -->
+	<select id="partnerTagList"
+		resultType="bridge.dto.ComposerRequestTagDto">
+		select crt_tag, cr_idx
+		from composer_request_tag
+	</select>
+
+	<!-- 파트너 구인 디테일 -->
+	<select id="openPartnerDetail"
+		resultType="bridge.dto.ComposerRequestDto">
+		select * from composer_request
+		where cr_idx = #{crIdx} and
+		deleted_yn=0
+	</select>
+	<!-- 파트너 구인 디테일 태그 -->
+	<select id="PartnerDetailTag"
+		resultType="bridge.dto.ComposerRequestTagDto">
+		select crt_tag
+		from composer_request_tag
+		where cr_idx =
+		#{crIdx}
+	</select>
+
+	<delete id="deletePartner" parameterType="int">
+		update composer_request
+		set
+		deleted_yn= 1
+		where cr_idx = #{crIdx}
+	</delete>
+
+
+
+</mapper>

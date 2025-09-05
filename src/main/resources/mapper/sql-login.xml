@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="bridge.mapper.LoginMapper">
+	<select id="login" parameterType="bridge.dto.LoginDto" resultType="bridge.dto.UserDto">
+		select user_id, user_password, user_name, user_email, user_phone_number, user_point, user_halted, report_count
+		  from users
+		 where user_id = #{userId} and user_password = #{userPassword} 
+	</select>
+
+	<select id="selectUserByUserId" parameterType="String" resultType="bridge.dto.UserDto">
+		select user_id, user_password, user_name,  user_email, user_phone_number, user_point, user_halted, report_count
+		  from users
+		 where user_id = #{userId} and  user_halted = false
+	</select>
+	
+
+	<!-- 외부 로그인 -->
+	<select id ="passInformation" parameterType="bridge.dto.UserDto" resultType="bridge.dto.UserDto">
+		select user_name, user_email from users
+			where user_name = #{userName} and user_email=#{userEmail} and user_halted =false
+	</select>
+	<!-- 아이디 중복체크 -->
+	<select id="userIdCheck" parameterType="bridge.dto.UserDto" resultType="int">
+		select COUNT(*)
+		from users
+		where user_id = #{userId}
+	</select>
+	<insert id ="registUser" parameterType="bridge.dto.UserDto">
+		insert into users (user_id, user_password, user_name, user_email, user_phone_number, user_point, user_halted, report_count)
+		values (#{userId}, #{userPassword}, #{userName}, #{userEmail},#{userPhoneNumber},#{userPoint},#{userHalted},#{reportCount})
+	</insert>
+	<select id ="findId" parameterType="String" resultType="String">
+		select user_id
+		from users
+		where user_email = #{email}
+	</select>
+	<select id ="findPassword" parameterType="String" resultType="bridge.dto.UserDto">
+		select *
+		from users
+		where user_email = #{email}
+	</select>
+	<update id="updatePassword" parameterType="bridge.dto.UserDto" >
+		update users
+		set user_password = #{userPassword}
+		where user_id = #{userId}
+	</update >
+			
+	<!-- <select id ="getloginDto" parameterType="bridge.dto.UserDto" resultType="bridge.dto.UserDto">
+		select * 
+		from users
+		where user_phone_number = #{userPhoneNumber} and user_name = #{userName}
+	</select> -->
+	
+	<select id="selectHalted" parameterType="bridge.dto.UserDto" resultType="int">
+		select user_halted from users
+		where user_id = #{userId}
+	</select>
+
+</mapper>

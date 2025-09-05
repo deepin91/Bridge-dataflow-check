@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="bridge.mapper.JamMapper">
+
+	<insert id="insertJam" parameterType="bridge.dto.ConcertDto">
+		insert into concert (c_title,c_contents,c_photo,c_writer)
+		values (#{title},#{content},#{cPhoto},#{cWriter})
+		<selectKey keyProperty="cIdx" resultType="int" order="AFTER">
+			select
+			last_insert_id();
+		</selectKey>
+	</insert>
+	
+	<insert id="inserMusic" parameterType="bridge.dto.ConcertMusicDto">
+	insert into concert_music (c_idx,cm_music,cm_instrument)
+	values(#{cIdx},#{cmMusic},#{cmInstrument})
+	</insert>
+	<select id="getJam" resultType="bridge.dto.ConcertDto">
+		select *
+		from concert
+		where c_idx=#{cIdx}
+	</select>
+	<select id="getMusicUUID" resultType="bridge.dto.ConcertMusicDto">
+		select cm_idx, cm_music,cm_instrument
+		from concert_music
+		where c_idx=#{cIdx}
+	</select>
+	<select id= "jamList" resultType="bridge.dto.ConcertDto">
+	select * from concert
+	order by c_idx DESC
+	</select>
+</mapper>
