@@ -7,4 +7,4 @@ pluginManagement {
 		
 	}
 }
-rootProject.name = 'Bridge-develop'
+rootProject.name = 'Bridge-dataflow-check'
