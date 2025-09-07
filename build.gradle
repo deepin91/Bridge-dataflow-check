@@ -5,7 +5,7 @@ plugins {
 //	id 'io.spring.dependency-management' version '1.0.15.RELEASE'
 }
 
-group = 'com.example'
+group = 'com.bridge'
 version = '0.0.1-SNAPSHOT'
 sourceCompatibility = '17'
 targetCompatibility = '17'
@@ -35,10 +35,11 @@ dependencies {
 	// Mybatis, Lombok, MySQL
 	implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.0'
 	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 	runtimeOnly 'com.mysql:mysql-connector-j'
 	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
-	annotationProcessor 'org.projectlombok:lombok'
+	
 
 	// Logging
 	implementation group: 'org.bgee.log4jdbc-log4j2', name: 'log4jdbc-log4j2-jdbc4.1', version: '1.16'
@@ -63,6 +64,13 @@ dependencies {
 	
 	// Test
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	// H2 Database (테스트용 인메모리 DB)
+	runtimeOnly 'com.h2database:h2'
+	
+	testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
+	
+	// Optional: Mockito (Mock 객체 사용 시)
+//	testImplementation 'org.mockito:mockito-core:5.5.0'
 }
 
 tasks.named('test') {
