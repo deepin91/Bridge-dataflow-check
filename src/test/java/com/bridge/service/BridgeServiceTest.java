@@ -49,3 +49,4 @@ public class BridgeServiceTest {
 }
 // --0907 
 // 위에 오류임 제대로 고치고 난 후에 돌려볼 것 
+// java.lang.IllegalArgumentException: Error: test loader org.eclipse.jdt.internal.junit5.runner.JUnit5TestLoader not found: 오류로 불가 Junit5 안됨
