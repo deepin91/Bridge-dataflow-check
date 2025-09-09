@@ -64,10 +64,12 @@ dependencies {
 	
 	// Test
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
+	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.2'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.10.2'
 	// H2 Database (테스트용 인메모리 DB)
 	runtimeOnly 'com.h2database:h2'
 	
-	testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
 	
 	// Optional: Mockito (Mock 객체 사용 시)
 //	testImplementation 'org.mockito:mockito-core:5.5.0'
