@@ -2,12 +2,10 @@ package bridge.controller;
 
 import java.util.List;
 
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,14 +13,12 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import bridge.dto.NoticeDto;
 import bridge.dto.UserDto;
 import bridge.service.JpaService;
-import io.swagger.annotations.ApiOperation;
-import lombok.RequiredArgsConstructor;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RestController
@@ -32,7 +28,7 @@ public class NoticeController {
 	@Autowired
 	JpaService jpaService;
 
-	@ApiOperation(value="공지 목록 조회")
+	@Operation(summary="공지 목록 조회")
 	@GetMapping("/api/notice")
 	public ResponseEntity<List<NoticeDto>> noticeList() throws Exception {
 		List<NoticeDto> noticeList = jpaService.noticeList();
@@ -43,7 +39,7 @@ public class NoticeController {
 		}
 	}
 
-	@ApiOperation(value="공지 작성")
+	@Operation(summary="공지 작성")
 	@PostMapping("/api/notice/write")
 	public ResponseEntity<String> insertNotice(@RequestBody NoticeDto noticeDto,Authentication authentication) throws Exception {
 		try {
@@ -57,7 +53,7 @@ public class NoticeController {
 	}
 
 
-	@ApiOperation(value="공지 게시글 조회")
+	@Operation(summary="공지 게시글 조회")
 	@GetMapping("/api/notice/detail/{noticeIdx}")
 	public ResponseEntity<NoticeDto> noticeDetail(@PathVariable("noticeIdx") int noticeIdx) throws Exception {
 		System.out.println("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
@@ -70,7 +66,7 @@ public class NoticeController {
 		}
 	}
 
-	@ApiOperation(value="공지 게시글 수정")
+	@Operation(summary="공지 게시글 수정")
 	@PutMapping("/api/notice/{noticeIdx}")
 	public ResponseEntity<String> updateNotice(@PathVariable("noticeIdx") int noticeIdx, 
 			@RequestBody NoticeDto noticeDto, Authentication authentication) throws Exception {
@@ -95,7 +91,7 @@ public class NoticeController {
 		}
 	}
 
-	@ApiOperation(value="공지 게시글 삭제")
+	@Operation(summary="공지 게시글 삭제")
 	@DeleteMapping("/api/notice/delete/{noticeIdx}")
 	public ResponseEntity<String> deleteNotice(@PathVariable ("noticeIdx") int noticeIdx, Authentication authentication) throws Exception{
 		try {

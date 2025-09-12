@@ -23,7 +23,7 @@ import bridge.dto.UserDto;
 import bridge.dto.UserProfileDto;
 import bridge.mapper.BridgeMapper;
 import bridge.service.BridgeService;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.extern.slf4j.Slf4j;
 
 @CrossOrigin(origins = "*", allowedHeaders = "*")
@@ -37,7 +37,7 @@ public class UserProfileController {
 	@Autowired
 	BridgeMapper bridgeMapper;
 
-	@ApiOperation(value="프로필 작성")
+	@Operation(summary="프로필 작성")
 	@PostMapping("/api/insertProfile/{userId}")
 	public ResponseEntity<Map<String, Object>> insertProfile(@PathVariable("userId") String userId,
 			@RequestPart(value = "data", required = false) UserProfileDto userProfileDto,
@@ -103,7 +103,7 @@ public class UserProfileController {
 		}
 	}
 	
-	@ApiOperation(value="프로필 조회")
+	@Operation(summary="프로필 조회")
 	@GetMapping("/api/profile/{userId}")
 	public ResponseEntity<Map<String, Object>> getPorfile(@PathVariable("userId") String userId) throws Exception {
 		Map<String, Object> result = new HashMap<>();

@@ -8,8 +8,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletResponse;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,17 +17,16 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import bridge.dto.ComposerRequestDto;
 import bridge.dto.ComposerRequestTagDto;
-import bridge.dto.TipDto;
 import bridge.mapper.BridgeMapper;
 import bridge.service.BridgeService;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 
 @CrossOrigin(origins = "*", allowedHeaders = "*")
@@ -42,7 +39,7 @@ public class PartnerApiController {
 	@Autowired
 	BridgeMapper bridgeMapper;
 
-	@ApiOperation(value="커미션 게시글 작성")
+	@Operation(summary="커미션 게시글 작성")
 	@PostMapping("/api/insertPartnerWrite")
 	public ResponseEntity<Map<String, Object>> insertPartnerWrite(
 			@RequestPart(value = "data", required = false) ComposerRequestDto composerRequestDto,
@@ -96,7 +93,7 @@ public class PartnerApiController {
 		}
 	}
 
-	@ApiOperation(value="커미션 목록 조회")
+	@Operation(summary="커미션 목록 조회")
 	@GetMapping("/api/openPartnerList")
 	public ResponseEntity<Map<String, Object>> openPartnerList() throws Exception {
 
@@ -111,7 +108,7 @@ public class PartnerApiController {
 		}
 	};
 
-	@ApiOperation(value="커미션 게시글에 달린 태그 조회")
+	@Operation(summary="커미션 게시글에 달린 태그 조회")
 	@GetMapping("/api/openTagList")
 	public ResponseEntity<Map<String, Object>> openTagList() throws Exception {
 		Map<String, Object> map = new HashMap<>();
@@ -125,7 +122,7 @@ public class PartnerApiController {
 		}
 	}
 
-	@ApiOperation(value="커미션 게시글 상세 조회")
+	@Operation(summary="커미션 게시글 상세 조회")
 	@GetMapping("/api/openPartnerDetail/{crIdx}")
 	public ResponseEntity<Map<String, Object>> openPartnerDetail(@PathVariable("crIdx") int crIdx) throws Exception {
 		Map<String, Object> map = new HashMap<>();
@@ -143,7 +140,7 @@ public class PartnerApiController {
 	}
 
 	// 이미지 불러오는 코드 -> 재활용 가능
-	@ApiOperation(value="커미션 목록 이미지 조회")
+	@Operation(summary="커미션 목록 이미지 조회")
 	@GetMapping("/api/getImage/{imgName}")
 	public void getImage(@PathVariable("imgName") String imgName, HttpServletResponse response) throws Exception {
 		FileInputStream fis = null;
@@ -174,7 +171,7 @@ public class PartnerApiController {
 		}
 	}
 	
-	@ApiOperation(value="커미션 게시글 수정")
+	@Operation(summary="커미션 게시글 수정")
 	@PutMapping("/api/updatePartner/{crIdx}")
 	public ResponseEntity<Object> updatePartner(@PathVariable("crIdx") int crIdx,
 			@RequestPart(value = "data", required = false) ComposerRequestDto composerRequestDto,
@@ -183,7 +180,7 @@ public class PartnerApiController {
 		return ResponseEntity.status(HttpStatus.OK).body(null);
 	}
 	
-	@ApiOperation(value="커미션 게시글 삭제")
+	@Operation(summary="커미션 게시글 삭제")
 	@DeleteMapping("/api/deletePartner/{crIdx}")
 	public ResponseEntity<Object> deletePartner(@PathVariable("crIdx") int crIdx) throws Exception {
 		bridgeMapper.deletePartner(crIdx);

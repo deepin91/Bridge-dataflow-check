@@ -34,8 +34,8 @@ dependencies {
 	
 	// Mybatis, Lombok, MySQL
 	implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.3'// java ver 21에 맞게 버전 업그레이드 --09/12
-	compileOnly 'org.projectlombok:lombok'
-	annotationProcessor 'org.projectlombok:lombok'
+	compileOnly 'org.projectlombok:lombok' // lombok 버전 수정
+	annotationProcessor 'org.projectlombok:lombok'// --수정
 	runtimeOnly 'com.mysql:mysql-connector-j'
 	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
@@ -56,7 +56,7 @@ dependencies {
 	
 	// Swagger/OpenAPI
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0' 
-	// implementation group: 'io.springfox', name: 'springfox-boot-starter', version: '3.0.0'
+	// implementation group: 'io.springfox', name: 'springfox-boot-starter', version: '3.0.0' //Swagger 의존성 삭제 21버전으로 변경하면서 윗줄 내용으로 변경 --09/12
 	// https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt-api
 	// https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt-impl
 	// https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt-jackson

@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
@@ -28,7 +27,7 @@ import bridge.dto.MusicDto;
 import bridge.dto.UserDto;
 import bridge.service.BridgeService;
 import bridge.service.JamService;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
 
 @RestController
 public class JamController {
@@ -38,14 +37,14 @@ public class JamController {
 	@Autowired
 	BridgeService bridgeService;
 
-	@ApiOperation(value = "잼 목록 조회")
+	@Operation(summary = "잼 목록 조회")
 	@GetMapping("/api/jam")
 	public ResponseEntity<List<ConcertDto>> JamList() throws Exception {
 		List<ConcertDto> list = jamService.jamList();
 		return ResponseEntity.status(HttpStatus.OK).body(list);
 	}
 
-	@ApiOperation(value = "잼 게시글 작성")
+	@Operation(summary = "잼 게시글 작성")
 	@PostMapping("/api/insertjam")
 	public ResponseEntity<Integer> insertTip(@RequestPart(value = "data", required = false) ConcertDto concertDto,
 			@RequestPart(value = "files", required = false) MultipartFile[] files, Authentication authentication)
@@ -86,7 +85,7 @@ public class JamController {
 		}
 	}
 
-	@ApiOperation(value = "잼 게시글 음악 첨부")
+	@Operation(summary = "잼 게시글 음악 첨부")
 	@PostMapping("/api/insertmusic/{cIdx}")
 	public ResponseEntity<Integer> insertMusic(@PathVariable("cIdx") int cIdx,
 			@RequestPart(value = "data", required = false) ConcertMusicDto concertMusicDto,
@@ -129,7 +128,7 @@ public class JamController {
 		}
 	}
 
-	@ApiOperation(value = "잼 디테일 조회")
+	@Operation(summary = "잼 디테일 조회")
 	@GetMapping("/api/jam/{cIdx}")
 	public ResponseEntity<Map<String, Object>> insertTip(@PathVariable("cIdx") int cIdx) throws Exception {
 		ConcertDto Data = jamService.getJam(cIdx);
@@ -142,7 +141,7 @@ public class JamController {
 		return ResponseEntity.status(HttpStatus.OK).body(result);
 	}
 
-	@ApiOperation(value = "잼 댓글 작성")
+	@Operation(summary = "잼 댓글 작성")
 	@PostMapping("/api/insertComments/{cIdx}")
 	public ResponseEntity<Map<String, Object>> insertComments(@RequestBody CommentsDto commentsDto,
 			@PathVariable("cIdx") int cIdx, Authentication authentication) throws Exception {
@@ -164,7 +163,7 @@ public class JamController {
 		}
 	}
 
-	@ApiOperation(value = "잼 댓글 삭제")
+	@Operation(summary = "잼 댓글 삭제")
 	@DeleteMapping("/api/CommentsDelete/{ccIdx}")
 	public ResponseEntity<Object> deleteComments(@PathVariable("ccIdx") int ccIdx) throws Exception {
 		try {
