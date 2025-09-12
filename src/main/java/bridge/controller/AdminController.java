@@ -16,7 +16,8 @@ import bridge.dto.ReportDto;
 import bridge.dto.UserDto;
 import bridge.mapper.BridgeMapper;
 import bridge.service.BridgeService;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import lombok.extern.slf4j.Slf4j;
 
 @CrossOrigin(origins = "*", allowedHeaders = "*")
@@ -30,7 +31,7 @@ public class AdminController {
 	@Autowired
 	private BridgeMapper bridgeMapper;
 
-	@ApiOperation(value = "신고 목록 조회")
+	@Operation(summary = "신고 목록 조회", description = "모든 사용자의 신고 목록을 최신순으로 조회합니다.")
 	@GetMapping("/api/openReportList")
 	public ResponseEntity<List<ReportDto>> openReportList() throws Exception {
 		List<ReportDto> list = bridgeService.openReportList();
@@ -41,9 +42,11 @@ public class AdminController {
 		}
 	}
 
-	@ApiOperation(value = "특정 신고 목록 조회")
+	@Operation(summary = "특정 신고 목록 조회",  description = "특정 신고 ID에 해당하는 신고의 상세 정보를 조회합니다.")
 	@GetMapping("/api/openReportDetail/{reportIdx}")
-	public ResponseEntity<ReportDto> openReportDetail(@PathVariable("reportIdx") int reportIdx) throws Exception {
+	public ResponseEntity<ReportDto> openReportDetail(
+			@Parameter(description = "상세 조회를 위한 신고의 고유 ID", required = true)
+			@PathVariable("reportIdx") int reportIdx) throws Exception {
 		ReportDto reportDto = bridgeService.openReportDetail(reportIdx);
 		if (reportDto == null) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
@@ -52,10 +55,11 @@ public class AdminController {
 		}
 	}
 
-	@ApiOperation(value = "유저 신고 카운트 조회")
-
+	@Operation(summary = "유저 신고 카운트 조회", description = "특정 사용자가 받은 총 신고 횟수를 조회합니다.")
 	@GetMapping("/api/reportCount/{userId}")
-	public ResponseEntity<Object> selectReportCount(@PathVariable("userId") String userId) throws Exception {
+	public ResponseEntity<Object> selectReportCount(
+			@Parameter(description = "신고 카운트를 조회할 사용자의 ID", required = true)
+			@PathVariable("userId") String userId) throws Exception {
 		try {
 			int a = bridgeMapper.selectReportCount(userId);
 			return ResponseEntity.status(HttpStatus.OK).body(a);
@@ -64,10 +68,13 @@ public class AdminController {
 		}
 	}
 
-	@ApiOperation(value = "신고 처리")
-
+	@Operation(summary = "신고 처리", description = "특정 사용자에 대한 신고를 처리하여 상태를 변경합니다.")
 	@PutMapping("/api/handleReport/{userId}")
-	public ResponseEntity<Object> handleReport(@PathVariable("userId") String userId, @RequestBody UserDto userDto)
+	public ResponseEntity<Object> handleReport(
+			@Parameter(description = "신고를 처리할 사용자의 ID", required = true)
+			@PathVariable("userId") String userId,
+			@RequestBody UserDto userDto)
+		 // @RequestBody(description = "신고 처리 정보를 담은 DTO 객체", required = true)
 			throws Exception {
 		try {
 			userDto.setUserId(userId);

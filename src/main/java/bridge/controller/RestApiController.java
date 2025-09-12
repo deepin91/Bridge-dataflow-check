@@ -14,9 +14,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import javax.servlet.ServletOutputStream;
-import javax.servlet.http.HttpServletResponse;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -35,7 +32,9 @@ import bridge.dto.ReportDto;
 import bridge.dto.UserDto;
 import bridge.mapper.BridgeMapper;
 import bridge.service.BridgeService;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
+import jakarta.servlet.ServletOutputStream;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 
 @CrossOrigin(origins = "*", allowedHeaders = "*")
@@ -49,7 +48,7 @@ public class RestApiController {
 	@Autowired
 	private BridgeMapper bridgeMapper;
 
-	@ApiOperation(value = "음악 파일 조회")
+	@Operation(summary = "음악 파일 조회")
 	@GetMapping("/api/getMusic/{musicUUID}")
 	public void getMusic(@PathVariable("musicUUID") String musicUUID, HttpServletResponse response) throws Exception {
 		FileInputStream fis = null;
@@ -75,7 +74,7 @@ public class RestApiController {
 		}
 	}
 
-	@ApiOperation(value = "음원 분리 컨테이너 실행")
+	@Operation(summary = "음원 분리 컨테이너 실행")
 	@GetMapping("/api/docker/{musicUUID}")
 	public ResponseEntity<Map<String, Object>> dockerList(@PathVariable("musicUUID") String musicUUID)
 			throws Exception {
@@ -98,7 +97,7 @@ public class RestApiController {
 		return ResponseEntity.ok(result);
 	}
 
-	@ApiOperation(value = "컨테이너 실행 여부 조회")
+	@Operation(summary = "컨테이너 실행 여부 조회")
 	@GetMapping("/api/IsDockerRun")
 	public ResponseEntity<Boolean> isDockerRun() {
 		final String command = "docker container ls";
@@ -124,7 +123,7 @@ public class RestApiController {
 		return ResponseEntity.ok(isRunning);
 	}
 
-	@ApiOperation(value = "분리된 음원 폴더 조회")
+	@Operation(summary = "분리된 음원 폴더 조회")
 	@GetMapping("/api/splitedMusic/{musicUUID}")
 	public List<String> splitedMusic(@PathVariable("musicUUID") String musicUUID) throws Exception {
 		String path = "C:/home/ubuntu/temp/output/" + musicUUID + "/";
@@ -141,7 +140,7 @@ public class RestApiController {
 		return fileNames;
 	};
 
-	@ApiOperation(value = "분리된 음원 재생")
+	@Operation(summary = "분리된 음원 재생")
 	@GetMapping("/api/getSplitedMusic/{musicUUID}/{fn}")
 	public void getSplitedMusic(@PathVariable("musicUUID") String musicUUID, HttpServletResponse response,
 			@PathVariable("fn") String fn) throws Exception {
@@ -167,7 +166,7 @@ public class RestApiController {
 		}
 	}
 
-	@ApiOperation(value = "분리된 음원 다운로드")
+	@Operation(summary = "분리된 음원 다운로드")
 	@GetMapping("/api/downloadSplitedMusic/{musicUUID}/{fileName:.+}")
 	public void downloadSplitedMusic(@PathVariable("musicUUID") String musicUUID,
 			@PathVariable("fileName") String fileName, HttpServletResponse response) throws Exception {
@@ -190,7 +189,7 @@ public class RestApiController {
 		}
 	}
 
-	@ApiOperation(value = "분리할 음원 업로드")
+	@Operation(summary = "분리할 음원 업로드")
 	@PostMapping("/api/insertMusicForSplit/{cIdx}")
 	public ResponseEntity<Map<String, Object>> insertMusicForSplit(@PathVariable("cIdx") int cIdx,
 			@RequestPart(value = "files", required = false) MultipartFile[] files) throws Exception {
@@ -237,7 +236,7 @@ public class RestApiController {
 		}
 	}
 
-	@ApiOperation(value = "신고 작성")
+	@Operation(summary = "신고 작성")
 	@PostMapping("/api/report/{reportedUserId}")
 	public ResponseEntity<Map<String, Object>> insertReport(@RequestBody ReportDto reportDto,
 			@PathVariable("reportedUserId") String reportedUserId) throws Exception {
@@ -270,7 +269,7 @@ public class RestApiController {
 		}
 	}
 
-	@ApiOperation(value = "공지 목록 조회")
+	@Operation(summary = "공지 목록 조회")
 	@GetMapping("/api/announcementList")
 	public ResponseEntity<List<AnnouncementDto>> AnnouncementList() throws Exception {
 		List<AnnouncementDto> list = bridgeService.announcementList();
@@ -281,7 +280,7 @@ public class RestApiController {
 		}
 	}
 
-	@ApiOperation(value = "공지 게시글 조회")
+	@Operation(summary = "공지 게시글 조회")
 	@GetMapping("/api/announcementDetail/{aIdx}")
 	public ResponseEntity<AnnouncementDto> announcementDetail(@PathVariable("aIdx") int aIdx) throws Exception {
 		AnnouncementDto announcementDto = bridgeService.announcementDetail(aIdx);
@@ -292,7 +291,7 @@ public class RestApiController {
 		}
 	}
 
-	@ApiOperation(value = "회원 포인트 충전")
+	@Operation(summary = "회원 포인트 충전")
 	@GetMapping("/api/chargePoint/{userId}")
 	public ResponseEntity<UserDto> chargePonint(@PathVariable("userId") String userId) throws Exception {
 		UserDto userDto = bridgeService.chargePoint(userId);
