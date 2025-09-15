@@ -16,7 +16,8 @@ import lombok.NoArgsConstructor;
 @Table(name = "t_message")
 public class MessageEntity {
 	@Id	//엔티티의 기본키(PK)
-	@GeneratedValue(strategy= GenerationType.AUTO)	// 기본키 생성 전략 (DB에서 제공하는 키 생성 전략을 따른다)
+//	@GeneratedValue(strategy= GenerationType.AUTO)	// 기본키 생성 전략 (DB에서 제공하는 키 생성 전략을 따른다)
+	@GeneratedValue(strategy= GenerationType.IDENTITY)
 	private int messageIdx;
 	@Column(nullable = false)
 	private String writer;

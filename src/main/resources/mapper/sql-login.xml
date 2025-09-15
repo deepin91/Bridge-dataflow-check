@@ -47,11 +47,11 @@
 		where user_id = #{userId}
 	</update >
 			
-	<!-- <select id ="getloginDto" parameterType="bridge.dto.UserDto" resultType="bridge.dto.UserDto">
+	<select id ="getloginDto" parameterType="bridge.dto.UserDto" resultType="bridge.dto.UserDto">
 		select * 
 		from users
 		where user_phone_number = #{userPhoneNumber} and user_name = #{userName}
-	</select> -->
+	</select>
 	
 	<select id="selectHalted" parameterType="bridge.dto.UserDto" resultType="int">
 		select user_halted from users

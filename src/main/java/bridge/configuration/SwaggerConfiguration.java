@@ -33,3 +33,10 @@
 //				.build();
 //	}
 //}
+
+
+/* 
+ Spring Boot 3.x 으로 변경하면서 Swagger 2(Springfox)호환 문제 발생, 
+ springdoc-openapi 기반의 OpenAPI 3.0 방식으로 변경. 
+ 기존의 @ApiOperation(value=...) 어노테이션은 @Operation(summary=...)로 일괄 수정
+ */

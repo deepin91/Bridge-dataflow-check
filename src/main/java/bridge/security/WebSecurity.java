@@ -19,27 +19,22 @@ import bridge.service.LoginService;
 @Configuration
 public class WebSecurity {
 
-    private final LoginService loginService;
+
     private final LoginMapper loginMapper;
-    private final BCryptPasswordEncoder passwordEncoder;
     private final Environment env;
     private final JwtTokenUtil jwtTokenUtil;
     private final JwtRequestFilter jwtRequestFilter;
 
-    public WebSecurity(LoginService loginService,
-                       BCryptPasswordEncoder passwordEncoder,
-                       LoginMapper loginMapper,
+    public WebSecurity(LoginMapper loginMapper,
                        Environment env,
                        JwtTokenUtil jwtTokenUtil,
                        JwtRequestFilter jwtRequestFilter) {
-        this.loginService = loginService;
-        this.passwordEncoder = passwordEncoder;
+    	this.loginMapper = loginMapper;
         this.env = env;
-        this.loginMapper = loginMapper;
         this.jwtTokenUtil = jwtTokenUtil;
         this.jwtRequestFilter = jwtRequestFilter;
     }
-
+    
     // Spring Security 6 방식
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
@@ -70,8 +65,10 @@ public class WebSecurity {
     }
     
     // DaoAuthenticationProvider 사용
+    // Bean 내부 파라미터로 LoginService와 Encoder 받기 -- 순환참조 이슈로 무한루프에 빠짐 -해결 위해 필드 선언부에서 LoginService 삭제 및 BCryptPasswordEncoder 삭제 > 파라미터로 주입받아서 사용 
     @Bean
-    public AuthenticationProvider authenticationProvider() {
+    public AuthenticationProvider authenticationProvider(LoginService loginService,
+    													 BCryptPasswordEncoder passwordEncoder) { // -- 테스트 시 순환참조 오류로인한 수정 - LoginService는 파라미터로 주입받아서 사용 (순환참조 회피) 
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
         provider.setUserDetailsService(loginService);
         provider.setPasswordEncoder(passwordEncoder);
