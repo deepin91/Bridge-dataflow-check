@@ -1,4 +1,4 @@
-package com.bridge.controller;
+package bridge.controller;
 
 public class BridgeControlllerTest {
 

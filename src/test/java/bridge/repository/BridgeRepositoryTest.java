@@ -1,4 +1,4 @@
-package com.bridge.repository;
+package bridge.repository;
 
 public class BridgeRepositoryTest {
 

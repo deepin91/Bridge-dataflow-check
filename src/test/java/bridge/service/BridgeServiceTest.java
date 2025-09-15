@@ -1,6 +1,7 @@
-package com.bridge.service;
+package bridge.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import org.junit.jupiter.api.Test;
@@ -13,7 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import bridge.dto.UserDto;
 import bridge.mapper.LoginMapper;
-import bridge.service.LoginService;
+//import bridge.service.LoginService;
 
 
 @SpringBootTest(classes = bridge.BridgeApplication.class)
