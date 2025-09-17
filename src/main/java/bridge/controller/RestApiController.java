@@ -314,18 +314,28 @@ public class RestApiController {
 			return ResponseEntity.status(HttpStatus.OK).body(list);
 		}
 	}
+	/* AnnouncementList() 메서드는 공지사항 하나하나를 담은 AnnouncementDto 객체들의 리스트를,HTTP 상태 코드와 함께 감싸서 ResponseEntity 형태로 반환함
+	 * list에 bridgeService.announcementList() 해당 호출/반환 값을 저장하고
+	 * 만약 그 안에 값이 없을 경우 404 상태코드와 함께 null 반환
+	 * 있으면 200 OK와 함께 공지목록 반환
+	 */
 
 	@Operation(summary = "공지 게시글 조회")
 	@GetMapping("/api/announcementDetail/{aIdx}")
 	public ResponseEntity<AnnouncementDto> announcementDetail(@PathVariable("aIdx") int aIdx) throws Exception {
-		AnnouncementDto announcementDto = bridgeService.announcementDetail(aIdx);
+		AnnouncementDto announcementDto = bridgeService.announcementDetail(aIdx); // 서비스 호출 <-- 내부에서 DB 쿼리 날려서 공지 데이터 조회
 		if (announcementDto == null) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
 		} else {
 			return ResponseEntity.status(HttpStatus.OK).body(announcementDto);
 		}
 	}
-
+	// announcementDetail 메서드는 URL 경로의 {aIdx} 값을 정수형 변수 aIdx에 바인딩함
+	// aIdx를 인자로 bridgeService.announcementDeatil(aIdx) 메서드 호출 
+	// 위의 결과를 AnnouncementDto 타입의 announcementDto에 저장
+	// 만약 announcementDto가 null이면 404 상태코드와 함께 null 반환
+	// 값이 존재하면 200 OK 상태코드와 함께 해당 공지 데이터를 JSON으로 응답
+	
 	@Operation(summary = "회원 포인트 충전")
 	@GetMapping("/api/chargePoint/{userId}")
 	public ResponseEntity<UserDto> chargePonint(@PathVariable("userId") String userId) throws Exception {
@@ -336,5 +346,12 @@ public class RestApiController {
 			return ResponseEntity.status(HttpStatus.OK).body(userDto);
 		}
 	}
-
+	/* chargePoint() 메서드는 UserDto타입의 객체로 응답.
+	 * URL의 {userId} 값을 String 타입의 변수 userId에 바인딩함 
+	 * 해당 userId를 인자로 bridgeService.chargePoint(userId)를 호출해 처리 결과를 userDto에 저장
+	 * 그 userDto값이 null이면  404 상태코드 및 null 반환
+	 * 값 존재하면 OK와 함께 해당 데이터(userDto) JSON으로 응답
+	 */
+	// *** chargePoint() 메서드는 회원의 포인트를 충전한 후 그 결과를 UserDto 타입으로 응답함
+	
 }
