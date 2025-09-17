@@ -61,6 +61,7 @@ public class BridgeServiceImpl implements BridgeService {
 		return bridgeMapper.selectMusic(musicUUID);
 	}
 
+	// 신고 작성 시 호출
 	@Override
 	public int insertReport(ReportDto reportDto) {
 		return bridgeMapper.insertReport(reportDto);
