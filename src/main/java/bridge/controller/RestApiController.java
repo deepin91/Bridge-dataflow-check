@@ -354,4 +354,7 @@ public class RestApiController {
 	 */
 	// *** chargePoint() 메서드는 회원의 포인트를 충전한 후 그 결과를 UserDto 타입으로 응답함
 	
+	// -----여기도 응답코드에 대한 거 일괄 설덩 및 정리 필요해보이고 
+	// + 특히 메서드 네이밍 재정리 필요해보임 공지 Notice랑 Announcement 둘이 중복된듯 보임
+	// 왜 그런지 알아보고 그 후 처리 필
 }
