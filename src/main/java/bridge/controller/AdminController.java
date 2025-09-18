@@ -94,5 +94,13 @@ public class AdminController {
 	}
 	/* 이 또한 ResponseEntity<Integer>로 확실히 하거나 공통응답용 제네릭 DTO 하나 만들어서 success + message + data 구조로 응답시키는 방법도 고려 
 	 * 0 또는 1 대신 직관적이고 가독성있게 - 하나하나 응답 설정하기보다 ApiResponse<T> / CommonResponse<T> 사용해서 모든 컨트롤러에서 공통으로 반영 후 반환하도록 설정하는 방법도 있음 추천.
+	 * ResponseEntity 타입 명확하게 지정
+	  
+	 * 현재는 @Operation과 @Parameter에만 설명 적어놨는데 
+	 * 추후 @io.swagger.v3.oas.annotations.parameters.RequestBody 어노테이션 사용하여 @RequestBody에 대한 설명 추가하면 Swagger 문서에 깔끔하게 정리됨
+	 
+	 * Controller > Service > Mapper 흐름에 맞춰 정리 - 컨트롤러에선 요청에대한 유효성 검증/ 응답 구성만 담당하게하고
+	 * 비지니스 로직은 서비스로 분리하는게 이상적이나 현제 selectReportCount()는 bridgeMapper을 직접 호출하고있음
+	 * -- 위에 대한 내용을 매퍼 직접 호출이 아닌 서비스를 통해 호출되도록 하여 일관성 유지하는 것이 이상적
 	 */
 }
