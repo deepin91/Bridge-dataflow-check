@@ -1,5 +1,7 @@
 package bridge.entity;
 
+import java.time.LocalDateTime;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -31,7 +33,14 @@ public class MessageEntity {
 //	@ManyToOne(targetEntity = ChattingEntity.class)
 	@JoinColumn(name = "t_chattingroom")
 	private int roomIdx;
+	
+	@Column(nullable = false)
+	private LocalDateTime sentAt = LocalDateTime.now();
+	
+	@Column(nullable = false)
+	private LocalDateTime createdTime = LocalDateTime.now();
 }	
+
 	/*
 	@ManyToOne
     @JoinColumn(name = "room_idx", referencedColumnName = "roomIdx") // 실제 FK 이름과 매핑
@@ -46,7 +55,7 @@ public class MessageEntity {
 	 * writer도 단순한 문자열(String)로 저장됨 → UserEntity로 연결은 안 되어 있음
 	 */
 	
-	/* 메세지 주고받을 때 시간 필드 있으면 몇분 전 표시 가능  --  LocalDateTime sentAt 필드 추가 필드 추가 고려 */
+	/* -추가완료- 메세지 주고받을 때 시간 필드 있으면 몇분 전 표시 가능  --  LocalDateTime sentAt 필드 추가 필드 추가 고려 */
 
 	// 채팅은 1:1 구조로 ChattingEntity는 두 명의 유저 조합으로 고유한 채팅방을 구성함
 	// MessageEntity는 채팅방과 연결된 메세지 - 작성자, 내용, 시간 등을 포함 roomIdx를 기준으로 채팅방과 연관됨

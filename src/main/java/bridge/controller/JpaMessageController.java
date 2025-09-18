@@ -33,7 +33,7 @@ public class JpaMessageController {
     private JpaService jpaService;
     
     @Operation(summary="채팅 목록 조회")
-    @GetMapping("/chatroom")
+    @GetMapping("/api/chatroom")
     public ResponseEntity<Map<String,Object>> chatroom(Authentication authentication){
     	UserDto userDto = (UserDto) authentication.getPrincipal();
     	List<ChattingEntity> chattingEntity = jpaService.getChattingRoom(userDto.getUserId());
@@ -43,17 +43,29 @@ public class JpaMessageController {
     	return ResponseEntity.status(HttpStatus.OK).body(map);
     }
     
-    @Operation(summary="채팅방 열기")
+//    @Operation(summary="채팅방 열기")
+//    @PostMapping("/api/chatroom")
+//    public void openChat(@RequestBody ChattingEntity chattingEntity){
+//    	System.out.println(">>>>>>>>>>>>>>>>>>>> 오픈챗 실행");
+//        jpaService.openChat(chattingEntity);
+//
+//        System.out.println(">>>>>>>>>>>>>>>> 오픈챗 종료");
+//    }
+    
+    @Operation(summary="채팅방 열기 or 기존 방 입장") // --9/18 openChat() 메서드 삭제 후 해당 코드 추가
     @PostMapping("/api/chatroom")
-    public void openChat(@RequestBody ChattingEntity chattingEntity){
-    	System.out.println(">>>>>>>>>>>>>>>>>>>> 오픈챗 실행");
-        jpaService.openChat(chattingEntity);
+    public ResponseEntity<Map<String, Object>> openOrEnterChatRoom(@RequestBody ChattingEntity chattingEntity) {
+        int roomIdx = jpaService.openOrFindChat(chattingEntity);
 
-        System.out.println(">>>>>>>>>>>>>>>> 오픈챗 종료");
+        Map<String, Object> response = new HashMap<>();
+        response.put("roomIdx", roomIdx);
+        response.put("message", "채팅방 입장 완료");
+
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
     @Operation(summary="채팅 작성")
-    @GetMapping("/chat/{roomIdx}")
+    @GetMapping("/api/chat/{roomIdx}")
 	public ResponseEntity<Map<String, Object>> connect(@PathVariable("roomIdx") int roomIdx){
     	Map<String,Object> map = new HashMap<>();
     	List<MessageEntity> MessageEntity = jpaService.getMessage(roomIdx);
@@ -65,7 +77,7 @@ public class JpaMessageController {
     }
     
     @Operation(summary="채팅 메시지 전송 (WebSocket) - STOMP /pub/chat/message") // WebSocket 메세지는 Swagger에 뜨지 않음- 설명용으로 자세히   
-    @MessageMapping("/hello") // 경로 구체적으로 다시 네이밍 ex) /chat/message
+    @MessageMapping("/chat.message") // 경로 구체적으로 다시 네이밍 ex) /chat/message
     public void message(MessageEntity message) {
     	simpMessageSendingOperations.convertAndSend("/sub/channel/" + message.getRoomIdx(), message);
     	jpaService.insertData(message);
