@@ -2,6 +2,7 @@ package bridge.service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -29,7 +30,7 @@ public class JpaServiceImpl implements JpaService {
 	
 	@Override
 	public List<MessageEntity> getMessage(int roomIdx) {
-		return (List<MessageEntity>) jpaMessageRepository.findByRoomIdx(roomIdx);
+		return (List<MessageEntity>) jpaMessageRepository.findByRoomIdxOrderByCreatedTimeDesc(roomIdx);
 	}
 	
 	@Override
@@ -129,28 +130,35 @@ public class JpaServiceImpl implements JpaService {
 	
 	@Override
 	public List<ChattingRoomLastMessageDto> getChattingRoomMessage(String userId){
-		// 1. 로그인한 유저가 속한 채팅방 전체 조회 (userId1 또는 userId2가 본인인 경우)
-		List<ChattingEntity> chatRooms = Stream.concat(
-				jpaChattingRepository.findByUserId1(userId).stream(),
-				jpaChattingRepository.findByUserId2(userId).stream()
-		).distinct().collect(Collectors.toList());
 		
-		// 2. 각 채팅방에 대해 마지막 메시지 뽑고, DTO로 매핑
+		// - 로그인한 유저가 속한 채팅방 전체 조회 (userId1 또는 userId2가 본인인 경우)
+		// (로그인한 유저가 속한 채팅방을 userId1 또는 userId2 기준으로 모두 조회한 후 중복 제거)
+		List<ChattingEntity> chatRooms = Stream.concat(
+				jpaChattingRepository.findByUserId1(userId).stream(), // userId1로 참여한 방
+				jpaChattingRepository.findByUserId2(userId).stream() // userId2로 참여한 방
+		).distinct() // 동일한 채팅방이 2번 나올 수 있으니 중복제거 
+		 .collect(Collectors.toList());
+		
+		// - 각 채팅방에 대해 마지막 메시지 뽑고, DTO로 매핑
 		List<ChattingRoomLastMessageDto> result = new ArrayList<>();
 		for(ChattingEntity chatRoom : chatRooms) {
-			int roomIdx = chatRoom.getRoomIdx();
+			int roomIdx = chatRoom.getRoomIdx(); // 현재 채팅방 index 추출
 			
-			// 해당 채팅방의 메시지 중 가장 마지막 메시지 (createdTime 기준으로 가장 마지막)
+			// 해당 채팅방(roomIdx)의 모든 메시지를 조회
+			// (해당 채팅방의 메시지 중 가장 마지막 메시지 (createdTime 기준으로 가장 마지막))
 			List<MessageEntity> messages = jpaMessageRepository.findByRoomIdx(roomIdx);
 			
+			// 메시지가 없는 경우를 대비한 기본값 초기화
 			String lastMessage = "";
 			LocalDateTime lastSentTime = null;
 			
+			// 메시지가 하나 이상 있을 때 가장 마지막 메시지 추출
 			if(!messages.isEmpty()) {
-				MessageEntity last = messages.get(messages.size() -1);
+				MessageEntity last = messages.get(messages.size() -1); // 마지막 메시지 -  리스트 인덱스는 0부터 시작하므로 
 				lastMessage = last.getData(); // 메시지 내용
 				lastSentTime = last.getCreatedTime(); // 메시지 생성 시간 (필요 시 MessageEntity에 추가)
 			}
+			// 추출한 정보로 DTO 생성 및 채우기
 			ChattingRoomLastMessageDto chattingRoomLastMessageDto = new ChattingRoomLastMessageDto();
 			chattingRoomLastMessageDto.setRoomIdx(roomIdx);
 			chattingRoomLastMessageDto.setUserId1(chatRoom.getUserId1());
@@ -158,10 +166,16 @@ public class JpaServiceImpl implements JpaService {
 			chattingRoomLastMessageDto.setLastMessage(lastMessage);
 			chattingRoomLastMessageDto.setLastSentTime(lastSentTime);
 			
+			// 결과 리스트에 추가
 			result.add(chattingRoomLastMessageDto);
 		}
-		return result;
-	} // <-- GET /api/chatroom/list 요청 시 로그인한 사용자의 모든 패팅방 리스트가 불려옴 > 각 채팅방의 roomIdx, 대화상대, 마지막 메세지, 시간 까지 응답
+			// 채팅방 목록을 마지막 메세지 시간 기준으로 정렬(최신순)
+			result.sort(Comparator.comparing(ChattingRoomLastMessageDto::getLastSentTime,
+					Comparator.nullsLast(Comparator.reverseOrder())));
+		
+		return result; // <-- 모든 채팅방에 대해 DTO 리스트 반환
+	} // <-- GET /api/chatroom/list 요청 시 로그인한 사용자의 모든 채팅방 리스트가 불려옴 > 각 채팅방의 roomIdx, 대화상대, 마지막 메세지, 시간 까지 응답
+	  // 읽음처리는 추후 설정 고려중
 	
 //	@Override
 //	public void openChat(ChattingEntity chattingEntity) {

@@ -1,5 +1,6 @@
 package bridge.controller;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -64,6 +65,7 @@ public class JpaMessageController {
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
+    /* 채팅방 입장 시 이전 대화 불러오기 API */
     @Operation(summary="채팅 작성")
     @GetMapping("/api/chat/{roomIdx}")
 	public ResponseEntity<Map<String, Object>> connect(@PathVariable("roomIdx") int roomIdx){
@@ -77,10 +79,16 @@ public class JpaMessageController {
     }
     
     @Operation(summary="채팅 메시지 전송 (WebSocket) - STOMP /pub/chat/message") // WebSocket 메세지는 Swagger에 뜨지 않음- 설명용으로 자세히   
-    @MessageMapping("/chat.message") // 경로 구체적으로 다시 네이밍 ex) /chat/message
+    @MessageMapping("/chat/message") // 경로 구체적으로 다시 네이밍 ex) /chat/message
     public void message(MessageEntity message) {
+    	// 메시지 전처리: 시간 설정
+        message.setCreatedTime(LocalDateTime.now());
+        
+        // DB 저장
+        jpaService.insertData(message);
+        
+        // 메시지 브로드캐스트 (구독자들에게 전달)
     	simpMessageSendingOperations.convertAndSend("/sub/channel/" + message.getRoomIdx(), message);
-    	jpaService.insertData(message);
     }
 }
 

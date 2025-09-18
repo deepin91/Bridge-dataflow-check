@@ -9,5 +9,6 @@ import bridge.entity.MessageEntity;
 public interface JpaMessageRepository extends CrudRepository<MessageEntity, Integer> {
 
 	List<MessageEntity> findByRoomIdx(int roomIdx);
+	List<MessageEntity> findByRoomIdxOrderByCreatedTimeDesc(int roomIdx);
 
 }
