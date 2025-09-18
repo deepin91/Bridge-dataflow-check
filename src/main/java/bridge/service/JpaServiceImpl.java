@@ -85,6 +85,10 @@ public class JpaServiceImpl implements JpaService {
 	public int selectNoticeListCount() throws Exception {
 		return noticeMapper.selectNoticeListCount();
 	}
+	
+	/* 개선사항 -- 기존 채팅방 존재 여부 체크 >  insert할지 말지 설정해야함
+	 * 현재 중복체크가 없어서 동일 유저 둘이서 다시 채팅할 경우 기존 채팅방 불러오기가 아닌 중복된 채팅방이 늘어남  
+	 */
 	@Override
     public void openChat(ChattingEntity chattingEntity) {
 		if(jpaChattingRepository.findByUserId1AndUserId2(chattingEntity.getUserId1(),chattingEntity.getUserId2()).size() < 1

@@ -64,11 +64,12 @@ public class JpaMessageController {
     	return ResponseEntity.status(HttpStatus.OK).body(map);
     }
     
-    @Operation(summary="채팅 메세지 조회")
-    @MessageMapping("/hello")
+    @Operation(summary="채팅 메시지 전송 (WebSocket) - STOMP /pub/chat/message") // WebSocket 메세지는 Swagger에 뜨지 않음- 설명용으로 자세히   
+    @MessageMapping("/hello") // 경로 구체적으로 다시 네이밍 ex) /chat/message
     public void message(MessageEntity message) {
     	simpMessageSendingOperations.convertAndSend("/sub/channel/" + message.getRoomIdx(), message);
     	jpaService.insertData(message);
     }
-    
 }
+
+	/* REST API 경로 통일 -- @GetMapping("/chatroom") → @GetMapping("/api/chatroom") 등 RESTful하게 URL 정리 */
