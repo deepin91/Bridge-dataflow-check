@@ -176,6 +176,7 @@ public class JpaServiceImpl implements JpaService {
 		return result; // <-- 모든 채팅방에 대해 DTO 리스트 반환
 	} // <-- GET /api/chatroom/list 요청 시 로그인한 사용자의 모든 채팅방 리스트가 불려옴 > 각 채팅방의 roomIdx, 대화상대, 마지막 메세지, 시간 까지 응답
 	  // 읽음처리는 추후 설정 고려중
+	  // *****프론트에서 실시간으로 채팅목록 (최신순으로) 정렬하려면 따로 설정해야함****
 	
 //	@Override
 //	public void openChat(ChattingEntity chattingEntity) {
