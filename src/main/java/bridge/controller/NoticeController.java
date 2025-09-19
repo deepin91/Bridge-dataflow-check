@@ -32,6 +32,7 @@ public class NoticeController {
 	@GetMapping("/api/notice")
 	public ResponseEntity<List<NoticeDto>> noticeList() throws Exception {
 		List<NoticeDto> noticeList = jpaService.noticeList();
+		System.out.println("공지 리스트 조회됨: " + noticeList);
 		if (noticeList != null && noticeList.size() > 0) {
 			return ResponseEntity.status(HttpStatus.OK).body(noticeList);
 		} else {
