@@ -128,12 +128,18 @@ public class JpaServiceImpl implements JpaService {
 		return newChatRoom.getRoomIdx();
 	}
 	
+	
+	
+	/* 다른 메서드들은 CRUD 중심이라 별다른 처리 로직이 없지만 아래의 메서드는 중복 제거 및 정렬 + 마지막 메세지에 대한 데이터를 뽑아내야하는 등 
+	 * 여러 과정이 필요하기 때문에 보다 간단 명료하고 효율적인 코드 작성을 위해 (구현을 위해) Stream API와 Comparator 체이닝을 활용함 */
+	// 기능 특성상 정렬, 중복 제거, DTO 변환이 필요한 메서드라 단순 반복문보다 Stream 체이닝 방식이 더 적합
 	@Override
 	public List<ChattingRoomLastMessageDto> getChattingRoomMessage(String userId){
 		
 		// - 로그인한 유저가 속한 채팅방 전체 조회 (userId1 또는 userId2가 본인인 경우)
 		// (로그인한 유저가 속한 채팅방을 userId1 또는 userId2 기준으로 모두 조회한 후 중복 제거)
-		List<ChattingEntity> chatRooms = Stream.concat(
+		List<ChattingEntity> chatRooms = Stream.concat( 
+				/*List.addAll()로 두 리스트를 붙일 수도 있지만 Stream을 쓰면 중간에 filter, map, distinct 등 유연한 중간 처리들을 체이닝으로 넣을 수 있음*/ // 체이닝 - 메서드를 체인처럼 이어서 사용하는 것
 				jpaChattingRepository.findByUserId1(userId).stream(), // userId1로 참여한 방
 				jpaChattingRepository.findByUserId2(userId).stream() // userId2로 참여한 방
 		).distinct() // 동일한 채팅방이 2번 나올 수 있으니 중복제거 
@@ -141,7 +147,8 @@ public class JpaServiceImpl implements JpaService {
 		
 		// - 각 채팅방에 대해 마지막 메시지 뽑고, DTO로 매핑
 		List<ChattingRoomLastMessageDto> result = new ArrayList<>();
-		for(ChattingEntity chatRoom : chatRooms) {
+		/* chatRooms 리스트를 순회하면서 각 요소를 chatRoom으로 꺼냄 */
+		for(ChattingEntity chatRoom : chatRooms) { // chatRooms 리스트 안에있는 ChattingEntity 객체들을 하나씩 꺼내면서 chatRoom 변수에 담고 그 chatRoom객체로 반복문을 수행하는 것  
 			int roomIdx = chatRoom.getRoomIdx(); // 현재 채팅방 index 추출
 			
 			// 해당 채팅방(roomIdx)의 모든 메시지를 조회
@@ -170,11 +177,22 @@ public class JpaServiceImpl implements JpaService {
 			result.add(chattingRoomLastMessageDto);
 		}
 			// 채팅방 목록을 마지막 메세지 시간 기준으로 정렬(최신순)
-			result.sort(Comparator.comparing(ChattingRoomLastMessageDto::getLastSentTime,
-					Comparator.nullsLast(Comparator.reverseOrder())));
-		
+			result.sort(Comparator.comparing(ChattingRoomLastMessageDto::getLastSentTime, //클래스명::메서드명 or 인스턴스::메서드명 형태 --람다식 간단히 줄여쓴 문법 
+					Comparator.nullsLast(Comparator.reverseOrder())));  // Comparator.comparing(dto -> dto.getLastSentTime()) 이걸 간단하게 표현한 것 
+			// Comparator.comparing(...) - 특정 필드를 기준으로 비교하겠다
+			// ChattingRoomLastMessageDto::getLastSentTime - 정렬 기준 필드
+			// Comparator.nullsLast(...) - null인 값은 맨 뒤로
+			// Comparator.reverseOrder() - 최신순(내림차순) 정렬
+			
+			// ChattingRoomLastMessageDto 클래스의 getLastSentTime 메서드 필드를 기준으로 비요하여 null값은 맨 뒤에 두고 최신순으로 정렬
+			
+			// getLastSentTime() 값을 기준으로 정렬
+			// 만약 lastSentTime이 null이 아니면 시간순으로 비교, null인 경우는 리스트 뒤쪽으로 보냄 
+			// -> reverseOrder로 최근 시간이 맨 위로 오도록 내림차순 정렬
+			
 		return result; // <-- 모든 채팅방에 대해 DTO 리스트 반환
-	} // <-- GET /api/chatroom/list 요청 시 로그인한 사용자의 모든 채팅방 리스트가 불려옴 > 각 채팅방의 roomIdx, 대화상대, 마지막 메세지, 시간 까지 응답
+	} 
+}	  // <-- GET /api/chatroom/list 요청 시 로그인한 사용자의 모든 채팅방 리스트가 불려옴 > 각 채팅방의 roomIdx, 대화상대, 마지막 메세지, 시간 까지 응답
 	  // 읽음처리는 추후 설정 고려중
 	  // *****프론트에서 실시간으로 채팅목록 (최신순으로) 정렬하려면 따로 설정해야함****
 	
@@ -194,4 +212,12 @@ public class JpaServiceImpl implements JpaService {
 //		}
 //	}
 
-}
+	/* stream().forEach() - 단순 반복뿐 아니라 필터링, 변환, 정렬 등을 자유롭게 다룰 수 있음 */
+	
+	// 기존에는 for-each 문을 사용하여 (채팅목록을) 단순 반복처리했지만 채팅방 중복 생성 및 정렬 이슈가 발생하여
+	// 이를 개선하기 위해 Stream API와 Comparator 체이닝을 도입하여 기존의 코드를 간결하고 명확하게 개선하였습니다.
+
+	// 기존의 for-each문 구성에선 채팅방 중복체크 및 정렬이 제대로 관리되지 않는 문제가 있었으나
+	// 람다식과 Comparator 활용으로 가독성 높은 최신순 정렬 로직을 구현
+	/* -- 채팅방 중복 제거 및 최신순 정렬을 위해 Stream API와 Comparator 체이닝을 도입(사용)하여 기존 for-each 기반의 코드를 간결하고 명확하게 (처리)개선했습니다 */
+	
