@@ -115,6 +115,8 @@ public class NoticeController {
 	}
 }
 
-	
-
+// Notice는 공지사항 게시판이고 Announcement는 메인페이지 하단에 보이는 한줄의 공지사항 표시(고정으로 띄우는)
+// 근데 현재 일반유저가 공지 고정바 클릭해서 들어가면 url이 http://localhost:3000/notice/detail/1 로 보여지고
+// 그 페이지에서 공지사항 목록버튼 누르면 http://localhost:3000/admin/notice/list 로 타짐 이 부분 뭘 의도한건지 확실히  체크하고 넘어가야할듯
+// 네이밍이..무엇을 위한 url구분인지 헷갈림 
 
