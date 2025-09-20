@@ -120,3 +120,4 @@ public class NoticeController {
 // 그 페이지에서 공지사항 목록버튼 누르면 http://localhost:3000/admin/notice/list 로 타짐 이 부분 뭘 의도한건지 확실히  체크하고 넘어가야할듯
 // 네이밍이..무엇을 위한 url구분인지 헷갈림 
 
+// 아마 admin계정만 공지삭제가 가능하므로 공지 선택등 수정버튼이 나타나는 페이지가 아닐까 예상

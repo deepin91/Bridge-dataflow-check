@@ -304,6 +304,7 @@ public class RestApiController {
 		}
 	}
 
+	// --- 메인페이지 하단에 스와이프 동작하는 공지 클릭 시 나타나는 공지 조회 위한 메서드
 	@Operation(summary = "공지 목록 조회")
 	@GetMapping("/api/announcementList")
 	public ResponseEntity<List<AnnouncementDto>> AnnouncementList() throws Exception {
