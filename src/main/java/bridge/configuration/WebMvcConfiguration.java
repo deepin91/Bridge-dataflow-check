@@ -21,4 +21,12 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
 			.allowedMethods("*");
 
 	}	
+	
+	// ✅ 이미지 정적 리소스 핸들러 추가
+		@Override
+		public void addResourceHandlers(org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry registry) {
+			registry
+				.addResourceHandler("/images/**") // 프론트에서 접근할 URL 경로
+				.addResourceLocations("file:///C:/Users/조아라/files/"); // 실제 서버 내 저장 경로 (뒤에 `/` 꼭 붙이기)
+		}
 }

@@ -12,7 +12,7 @@
 		</selectKey>
 	</insert>
 	
-	<insert id="inserMusic" parameterType="bridge.dto.ConcertMusicDto">
+	<insert id="insertMusic" parameterType="bridge.dto.ConcertMusicDto">
 	insert into concert_music (c_idx,cm_music,cm_instrument)
 	values(#{cIdx},#{cmMusic},#{cmInstrument})
 	</insert>
@@ -22,7 +22,7 @@
 		where c_idx=#{cIdx}
 	</select>
 	<select id="getMusicUUID" resultType="bridge.dto.ConcertMusicDto">
-		select cm_idx, cm_music,cm_instrument
+		select cm_idx, musicUUID, music_title, cm_instrument
 		from concert_music
 		where c_idx=#{cIdx}
 	</select>
