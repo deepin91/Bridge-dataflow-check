@@ -63,7 +63,7 @@ public class JamController {
 			@RequestPart(value = "file", required = false) MultipartFile file, /*  MultipartFile[] → MultipartFile 로 변경 */
 			Authentication authentication) throws Exception { // "files"는 Multipart 형식 파일 배열로 받아옴 (이미지 등)
 																							  // Authentication authentication: 로그인한 사용자 정보를 Spring Security로부터 받아옴.
-		// 파일 업로드 경로 및 UUID 설정
+		// 파일 업로드 경로 및 UUID 설정 
 //		String UPLOAD_PATH = "C:/home/ubuntu/temp/";
 		String UPLOAD_PATH = "C:/Users/조아라/files/";
 		String uuid = UUID.randomUUID().toString(); // uuid -- 저장할 파일명 중복 방지를 위한 랜덤한 고유 문자열 생성
