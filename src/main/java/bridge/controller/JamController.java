@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -37,6 +38,9 @@ public class JamController {
 	JamService jamService;
 	@Autowired
 	BridgeService bridgeService;
+	
+	@Value("${file.upload-dir}")
+	private String uploadDir;
 
 	@Operation(summary = "잼 목록 조회")
 	@GetMapping("/api/jam")
@@ -56,6 +60,7 @@ public class JamController {
 	// !!!!!!!!!!!근데 오류남 이 부분 다시 설정 및 체크 필요 그리고 insertTip()였던 부분도 
 	
 	/* 잼(Jam) 게시글 작성 시, 파일 업로드 및 로그인 사용자 정보 기반으로 게시글을 등록하는 API */
+	// application.properties 파일에 추가한 경로 필드에 @Value 로 주입받아 사용(로컬환경)
 	@Operation(summary = "잼 게시글 작성") // Swagger 문서에 "잼 게시글 작성"으로 표시
 	@PostMapping("/api/insertjam") // 경로로 들어오는 요청을 처리
 	public ResponseEntity<Integer> insertJam( // -- 응답으로 상태코드 + int 타입 데이터 (concertDto.getCIdx(), 즉 생성된 게시글 번호)를 보냄
@@ -65,8 +70,8 @@ public class JamController {
 																							  // Authentication authentication: 로그인한 사용자 정보를 Spring Security로부터 받아옴.
 		// 파일 업로드 경로 및 UUID 설정 
 //		String UPLOAD_PATH = "C:/home/ubuntu/temp/";
-		String UPLOAD_PATH = "C:/Users/조아라/files/";
-		String uuid = UUID.randomUUID().toString(); // uuid -- 저장할 파일명 중복 방지를 위한 랜덤한 고유 문자열 생성
+//		String UPLOAD_PATH = "C:/Users/조아라/files/"; --Linux 환경 말고 로컬환경 경로로 테스트 하기위해 주석처리
+//		String uuid = UUID.randomUUID().toString(); // uuid -- 저장할 파일명 중복 방지를 위한 랜덤한 고유 문자열 생성
 //		List<String> fileNames = new ArrayList<>(); // 파일명 목록 저장용 리스트
 //		Map<String, Object> result = new HashMap<>(); // 결과 저장용 Map
 //		int registedCount = 0; // -- 등록 성공 여부를 저장하는 변수 성공 - 1 / 실패 - 0
@@ -87,19 +92,28 @@ public class JamController {
 				}
 				
 				// 저장 파일명: uuid + 확장자
-				String savedFileName = uuid + extension;
-				File targetFile = new File(UPLOAD_PATH + File.separator + savedFileName);
+				String savedFileName = UUID.randomUUID().toString() + extension;
+				File targetFile = new File(uploadDir, savedFileName);
+//				File targetFile = new File(UPLOAD_PATH + File.separator + savedFileName);
+				
+				if (!targetFile.getParentFile().exists()) {
+                    targetFile.getParentFile().mkdirs();
+                }
+
+                file.transferTo(targetFile);
+                concertDto.setCPhoto(savedFileName);
+            }
 				
 				// 실제 파일을 서버에 저장
-				try {
-					file.transferTo(targetFile); 
-				} catch (IOException | IllegalStateException e) { // 예외 처리 (파일 저장 중 오류 발생 시)
-					e.printStackTrace();
-					return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
-				}
-				// DB에 저장할 파일명 등록
-				concertDto.setCPhoto(savedFileName);
-			}
+//				try {
+//					file.transferTo(targetFile); 
+//				} catch (IOException | IllegalStateException e) { // 예외 처리 (파일 저장 중 오류 발생 시)
+//					e.printStackTrace();
+//					return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+//				}
+//				// DB에 저장할 파일명 등록
+//				concertDto.setCPhoto(savedFileName);
+//			}
 			// 게시글 등록
 			int registedCount = jamService.insertJam(concertDto);
 
