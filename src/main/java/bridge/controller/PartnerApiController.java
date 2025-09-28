@@ -146,7 +146,8 @@ public class PartnerApiController {
 		FileInputStream fis = null;
 		BufferedInputStream bis = null;
 		OutputStream out = null;
-		String UPLOAD_PATH = "C:/home/ubuntu/temp/";
+		String UPLOAD_PATH = "C:/Users/조아라/files/"; 
+//		String UPLOAD_PATH = "C:/home/ubuntu/temp/";
 
 		try {
 			response.setContentType("image/jpeg");
