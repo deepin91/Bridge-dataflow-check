@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import bridge.dto.ChattingRoomLastMessageDto;
 import bridge.dto.UserDto;
 import bridge.entity.ChattingEntity;
 import bridge.entity.MessageEntity;
@@ -37,10 +38,13 @@ public class JpaMessageController {
     @GetMapping("/api/chatroom")
     public ResponseEntity<Map<String,Object>> chatroom(Authentication authentication){
     	UserDto userDto = (UserDto) authentication.getPrincipal();
-    	List<ChattingEntity> chattingEntity = jpaService.getChattingRoom(userDto.getUserId());
+    	
+    	// DTO(마지막 메시지 포함된)로 채팅방 목록 가져오기
+    	List<ChattingRoomLastMessageDto> chattingList = jpaService.getChattingRoomMessage(userDto.getUserId());
+    	
     	Map<String,Object> map = new HashMap<>();
     	map.put("sender", userDto.getUserId());
-    	map.put("chatting", chattingEntity);
+    	map.put("chatting", chattingList); // 이제 lastMessage 필드가 있는 DTO가 들어감
     	return ResponseEntity.status(HttpStatus.OK).body(map);
     }
     
@@ -89,6 +93,14 @@ public class JpaMessageController {
         
         // 메시지 브로드캐스트 (구독자들에게 전달)
     	simpMessageSendingOperations.convertAndSend("/sub/channel/" + message.getRoomIdx(), message);
+    }
+    
+    @Operation(summary="채팅방 목록 (마지막 메시지 포함)")
+    @GetMapping("/api/chatroom/list")
+    public ResponseEntity<List<ChattingRoomLastMessageDto>> chatroomWithLastMessage(Authentication authentication) {
+        UserDto userDto = (UserDto) authentication.getPrincipal();
+        List<ChattingRoomLastMessageDto> result = jpaService.getChattingRoomMessage(userDto.getUserId());
+        return ResponseEntity.ok(result);
     }
 }
 

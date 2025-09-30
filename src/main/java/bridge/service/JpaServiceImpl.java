@@ -1,6 +1,7 @@
 package bridge.service;
 
 import java.time.LocalDateTime;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -30,7 +31,7 @@ public class JpaServiceImpl implements JpaService {
 	
 	@Override
 	public List<MessageEntity> getMessage(int roomIdx) {
-		return (List<MessageEntity>) jpaMessageRepository.findByRoomIdxOrderByCreatedTimeDesc(roomIdx);
+		return (List<MessageEntity>) jpaMessageRepository.findByRoomIdxOrderByCreatedTimeAsc(roomIdx);
 	}
 	
 	@Override
@@ -47,15 +48,21 @@ public class JpaServiceImpl implements JpaService {
 
 	@Override
 	public List<ChattingEntity> getChattingRoom(String userId) {
-		List<ChattingEntity> a = (List<ChattingEntity>) jpaChattingRepository.findByUserId1(userId);
-		List<ChattingEntity> b = (List<ChattingEntity>) jpaChattingRepository.findByUserId2(userId);
-		System.out.println("aaaaaaaaaaaaaaaaaaaaaa" + a+"BBBBBBBBBBBBBBBBBBBBBBBBBBB" + b);
-		if(a != null) {
-			return a;
-		}else {
-			return b;
-		}
+		List<ChattingEntity> a = jpaChattingRepository.findByUserId1(userId);
+		List<ChattingEntity> b = jpaChattingRepository.findByUserId2(userId);
+//		System.out.println("aaaaaaaaaaaaaaaaaaaaaa" + a+"BBBBBBBBBBBBBBBBBBBBBBBBBBB" + b);
+//		if(a != null) {
+//			return a;
+//		}else {
+//			return b;
+//		}
+		List<ChattingEntity> all = new ArrayList<>();
+		all.addAll(a);
+		all.addAll(b);
+		
+		return all;
 	}
+	
 	@Override
 	public List<NoticeDto> noticeList() throws Exception {
 		return noticeMapper.noticeList();
@@ -114,18 +121,24 @@ public class JpaServiceImpl implements JpaService {
 		String userA =  chattingEntity.getUserId1();
 		String userB = chattingEntity.getUserId2();
 		
-		// userA와 B 바꿔가며 중복조회
-		List<ChattingEntity> direct = jpaChattingRepository.findByUserId1AndUserId2(userA, userB);
-		List<ChattingEntity> reverse = jpaChattingRepository.findByUserId1AndUserId2(userB, userA);
+		//채팅방 중복 방지
+		if(userA.compareTo(userB) > 0) {
+			chattingEntity.setUserId1(userB);
+			chattingEntity.setUserId2(userA);
+		}
 		
-		if(!direct.isEmpty()) {
-			return direct.get(0).getRoomIdx();
-		}
-		if(!reverse.isEmpty()) {
-			return reverse.get(0).getRoomIdx();
-		}
-		ChattingEntity newChatRoom = jpaChattingRepository.save(chattingEntity);
-		return newChatRoom.getRoomIdx();
+		// 기존 채팅방 확인 > 없으면 새로 생성
+		return jpaChattingRepository.findByUserId1AndUserId2(
+				chattingEntity.getUserId1(), 
+				chattingEntity.getUserId2()
+				)
+				.map(ChattingEntity::getRoomIdx)
+				.orElseGet(() -> jpaChattingRepository.save(chattingEntity).getRoomIdx());
+//		List<ChattingEntity> direct = jpaChattingRepository.findByUserId1AndUserId2(userA, userB);
+//		List<ChattingEntity> reverse = jpaChattingRepository.findByUserId1AndUserId2(userB, userA);
+//		
+//		ChattingEntity newChatRoom = jpaChattingRepository.save(chattingEntity);
+//		return newChatRoom.getRoomIdx();
 	}
 	
 	

@@ -40,8 +40,8 @@ public class EmailController {
 	}
 
 	@PostMapping("/verifyCode")
-	public ResponseEntity<String> verifyCode(@RequestParam String email, 
-											@RequestParam String code) {
+	public ResponseEntity<String> verifyCode(@RequestParam("email") String email, 
+											@RequestParam("code") String code) {
 		String savedCode = redisTemplate.opsForValue().get(email);
 
 		if (savedCode != null && savedCode.equals(code)) {

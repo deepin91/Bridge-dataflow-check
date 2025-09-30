@@ -49,7 +49,8 @@ public class PartnerApiController {
 		dto.setCrIdx(composerRequestDto.getCrIdx());
 		dto.setCrtTags(composerRequestDto.getCrtTag());
 
-		String UPLOAD_PATH = "C:/home/ubuntu/temp/";
+//		String UPLOAD_PATH = "C:/home/ubuntu/temp/"; -- 로컬경로로 수정(임시)
+		String UPLOAD_PATH = "C:/Users/조아라/files/"; 
 		int insertedCount = 0;
 
 		String fileNames = "";

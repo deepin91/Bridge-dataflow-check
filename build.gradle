@@ -80,4 +80,5 @@ tasks.named('test') {
 	useJUnitPlatform()
 }
 
+
 // eclipse 버전 다운그레이드 / 재설치

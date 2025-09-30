@@ -56,12 +56,16 @@ public class TipApiController {
 	public ResponseEntity<Map<String, Object>> tipDetail(
 			@PathVariable("tbIdx") int tbIdx,
 			@PathVariable("update") int update) throws Exception {
-		TipDto tipDto = tipService.tipdetail(tbIdx);
-		List<TipCommentsDto> tipCommentsDto = tipService.tipcommentslist(tbIdx);
-		Map<String, Object> map = new HashMap<>();
+		
 		if (update == 1) {
 			tipService.updateViews(tbIdx);
 		}
+		// 조회수 업데이트 안되는 부분 if문 전에 있던 거 그 아래로 옮겨서 저장 후 불러오도록 설정변경
+		// + db에 default null 설정되어있어서 값 안 변했던 거 -> default not null 0 으로 세팅해서 수정.
+		TipDto tipDto = tipService.tipdetail(tbIdx);
+		List<TipCommentsDto> tipCommentsDto = tipService.tipcommentslist(tbIdx);
+		
+		Map<String, Object> map = new HashMap<>();
 		map.put("tipDetail", tipDto);
 		map.put("commentsList", tipCommentsDto);
 		return ResponseEntity.status(HttpStatus.OK).body(map);
@@ -162,5 +166,4 @@ public class TipApiController {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
 		}
 	}
-
 }

@@ -76,7 +76,8 @@ public class CommissionApiController {
 			@PathVariable("cIdx") int cIdx,
 			@RequestPart(value = "data", required = false) CommissionDetailDto commissionDetail,
 			@RequestPart(value = "files", required = false) MultipartFile[] files) throws Exception {
-		String UPLOAD_PATH = "C:/home/ubuntu/temp/";
+//		String UPLOAD_PATH = "C:/home/ubuntu/temp/";
+		String UPLOAD_PATH = "C:/Users/조아라/files/"; // --9/30 로컬경로로 수정
 		int insertedCount = 0;
 		List<String> fileNames = new ArrayList<>();
 
@@ -126,7 +127,8 @@ public class CommissionApiController {
 			// @Parameter(description = "게시글에 포함될 파일들", schema = @Schema(type = "string", format = "binary"))
 			@RequestPart(value = "files", required = false) MultipartFile[] files) throws Exception {
 
-		String UPLOAD_PATH = "C:/home/ubuntu/temp/";
+//		String UPLOAD_PATH = "C:/home/ubuntu/temp/";
+		String UPLOAD_PATH = "C:/Users/조아라/files/"; // 로컬경로로 수정
 		String uuid = UUID.randomUUID().toString();
 		List<String> fileNames = new ArrayList<>();
 
@@ -237,7 +239,8 @@ public class CommissionApiController {
 	public void CommissionDown(
 			@Parameter(description = "커미션 첨부파일 다운로드 관련 UUID", required = true)
 			@PathVariable("uuid") String uuid, HttpServletResponse response) throws Exception {
-		String filePath = "C:/home/ubuntu/temp/" + uuid + ".mp3";
+//		String filePath = "C:/home/ubuntu/temp/" + uuid + ".mp3";
+		String filePath = "C:/Users/조아라/files/" + uuid + ".mp3";
 		File file = new File(filePath);
 		if (file.exists()) {
 			response.setContentType("application/octet-stream");
