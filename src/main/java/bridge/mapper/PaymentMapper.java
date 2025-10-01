@@ -17,7 +17,7 @@ public interface PaymentMapper {
     int paymentDetail(String userId)throws Exception;
 	void doPayment(PaymentDto paymentDto);
 	void updatePoint(HashMap<String, Object> map);
-	void updatePartnerMoney();
+//	void updatePartnerMoney();
 	int insertPayment();
 	//관리자용 결제 내역
 	List<PayListDto> payListAll();

@@ -156,11 +156,11 @@
 	</insert>
 
 	<insert id="insertTag">
-		insert into user_tag(user_profile_idx,tag)
+		insert into user_tag(tag, user_profile_idx)
 		values
 		<foreach collection="tags" item="tags" separator=",">
 			(
-			#{userProfileIdx}, #{tags})
+			 #{tags}, #{userProfileIdx})
 		</foreach>
 	</insert>
 

@@ -28,7 +28,7 @@
 		pl_money,pl_date)
 		select clients, producer, downpayment, payment_dt
 		from
-		payment
+		payment 
 		order by payment_idx DESC limit 1
 	</insert>
 
@@ -36,11 +36,11 @@
 	 <insert id="doPayment" parameterType="bridge.dto.PaymentDto">
 		insert
 		into payment
-		(clients, producer, downpayment, total_cost, client_point, usepoint,
-		payment_dt)
+		(clients, producer, downpayment, client_point, usepoint,
+		payment_dt, total_cost)
 		values
 		(#{clients}, #{producer}, #{downpayment},
-		#{totalCost}, #{clientPoint}, #{usepoint}, now() )
+		#{clientPoint}, #{usepoint}, now(), #{totalCost} )
 	</insert> 
 
 	<!-- '보유포인트 - 사용포인트' 값을 유저 포인트에 업데이트 -->
@@ -50,6 +50,7 @@
 		user_point = user_point - #{plMoney}
 		where
 		user_id = #{userId}
+		and user_point >= #{userPoint};
 	</update>
 
 	<!-- 결제한 금액을 예치금으로 값 기록 -->
@@ -59,7 +60,8 @@
 		p.payment_idx = t.max_payment_idx SET d.pd_money = d.pd_money + p.downpayment; 
 		</update> -->
 
-<!-- 	<update id="updatePartnerMoney">
+
+<!--  <update id="updatePartnerMoney">
 		UPDATE commission AS c
 		INNER JOIN payment AS p
 		ON
@@ -71,7 +73,7 @@
 		ON p.payment_idx
 		= t.max_payment_idx
 		SET c.c_money = c.c_money + p.downpayment;
-	</update> -->
+	</update>  -->
 
 
 
