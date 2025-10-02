@@ -23,34 +23,27 @@
 	</select>
 	
 	<!-- 결제 내역 기록 -->
-	<insert id="insertPayment">
-		insert into pay_list(user_id1, user_id2,
-		pl_money,pl_date)
+	<insert id="insertPayment" parameterType="bridge.dto.PaymentDto">
+		insert into pay_list(user_id1, user_id2, pl_money, pl_date)
 		select clients, producer, downpayment, payment_dt
-		from
-		payment 
+		from payment 
 		order by payment_idx DESC limit 1
 	</insert>
 
 	<!-- 결제 진행 -->
 	 <insert id="doPayment" parameterType="bridge.dto.PaymentDto">
-		insert
-		into payment
-		(clients, producer, downpayment, client_point, usepoint,
-		payment_dt, total_cost)
+		insert into payment(clients, producer, downpayment, usepoint,
+		payment_dt)
 		values
-		(#{clients}, #{producer}, #{downpayment},
-		#{clientPoint}, #{usepoint}, now(), #{totalCost} )
+		(#{clients}, #{producer}, #{downpayment}, #{usepoint}, now())
 	</insert> 
 
 	<!-- '보유포인트 - 사용포인트' 값을 유저 포인트에 업데이트 -->
-	<update id="updatePoint" parameterType="HashMap">
+	<update id="updateClientPoint" parameterType="bridge.dto.PaymentDto">
 		update users 
-		set
-		user_point = user_point - #{plMoney}
-		where
-		user_id = #{userId}
-		and user_point >= #{userPoint};
+		set user_point = user_point - #{usepoint}
+		where user_id = #{clients}
+		and user_point >= #{usepoint}
 	</update>
 
 	<!-- 결제한 금액을 예치금으로 값 기록 -->
@@ -61,7 +54,7 @@
 		</update> -->
 
 
-<!--  <update id="updatePartnerMoney">
+	<update id="updatePartnerMoney">
 		UPDATE commission AS c
 		INNER JOIN payment AS p
 		ON
@@ -73,7 +66,7 @@
 		ON p.payment_idx
 		= t.max_payment_idx
 		SET c.c_money = c.c_money + p.downpayment;
-	</update>  -->
+	</update>
 
 
 

@@ -1,5 +1,6 @@
 package bridge.controller;
 
+import java.util.HashMap;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,20 +47,30 @@ public class PaymentController {
 	@Operation(summary = "유저 보유포인트 조회")
 	@GetMapping("/api/payment/detail/{userId}")
 	public ResponseEntity<Integer> paymentDetail(@PathVariable("userId") String userId) throws Exception {
-		int abc = paymentService.paymentDetail(userId);
-		return ResponseEntity.status(HttpStatus.OK).body(abc);
+		int userPoint = paymentService.paymentDetail(userId);
+		return ResponseEntity.status(HttpStatus.OK).body(userPoint);
 	}
 
 	
 
 	@Operation(summary = "회원간 결제 진행")
 	@PostMapping("/api/doPayment/{producer}")
-	public void doPayment(@PathVariable("producer") String producer, @RequestBody PaymentDto paymentDto)
-			throws Exception {
-		paymentDto.setProducer(producer);
-		paymentService.doPayment(paymentDto); // 결제 진행 + 유저 포인트 업데이트 수행
-		paymentMapper.insertPayment(); // 결제 내역 pay_list 에 기록
-		paymentMapper.updatePartnerMoney(); // 결제 내역 partner_detail 에 기록
+	public ResponseEntity<?> doPayment(@PathVariable("producer") String producer,
+									   @RequestBody PaymentDto paymentDto) {
+		try {
+			// PathVariable로 받은 producer를 DTO에 세팅
+			paymentDto.setProducer(producer);
+			
+			paymentService.doPayment(paymentDto); // 결제 진행 + 유저 포인트 업데이트 수행
+			paymentMapper.insertPayment(paymentDto); // 결제 내역 pay_list 에 기록
+//			paymentMapper.updateClientPoint(paymentDto);
+			paymentMapper.updatePartnerMoney(paymentDto); // 결제 내역 partner_detail 에 기록
+			
+			return ResponseEntity.ok("결제 성공");		
+		} catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body("결제 실패: " + e.getMessage());
+		}
 	}
 
 	@Operation(summary = "관리자용 결제 내역 조회")
