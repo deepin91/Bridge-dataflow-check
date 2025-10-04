@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -33,12 +34,17 @@ import lombok.extern.slf4j.Slf4j;
 @RestController
 @Slf4j
 public class PartnerApiController {
+	
+	@Value("${file.upload-dir}")
+	private String uploadDir;
+	
 	@Autowired
 	BridgeService bridgeService;
 
 	@Autowired
 	BridgeMapper bridgeMapper;
 
+	
 	@Operation(summary="커미션 게시글 작성")
 	@PostMapping("/api/insertPartnerWrite")
 	public ResponseEntity<Map<String, Object>> insertPartnerWrite(
@@ -141,36 +147,67 @@ public class PartnerApiController {
 	}
 
 	// 이미지 불러오는 코드 -> 재활용 가능
-	@Operation(summary="커미션 목록 이미지 조회")
+//	@Operation(summary="커미션 목록 이미지 조회")
+//	@GetMapping("/api/getImage/{imgName}")
+//	public void getImage(@PathVariable("imgName") String imgName, HttpServletResponse response) throws Exception {
+//		FileInputStream fis = null;
+//		BufferedInputStream bis = null;
+//		OutputStream out = null;
+//		String UPLOAD_PATH = "C:/Users/조아라/files/"; 
+////		String UPLOAD_PATH = "C:/home/ubuntu/temp/";
+//
+//		try {
+//			response.setContentType("image/jpeg");
+//			fis = new FileInputStream(UPLOAD_PATH + imgName);
+//			bis = new BufferedInputStream(fis);
+//			out = response.getOutputStream();
+//
+//			byte[] buffer = new byte[1024];
+//			while (bis.read(buffer) != -1) {
+//				out.write(buffer);
+//			}
+//		} finally {
+//			if (bis != null) {
+//				bis.close();
+//			}
+//			if (out != null) {
+//				out.close();
+//			}
+//			if (fis != null) {
+//				fis.close();
+//			}
+//		}
+//	}
+	
+	@Operation(summary = "커미션 목록 이미지 조회")
 	@GetMapping("/api/getImage/{imgName}")
 	public void getImage(@PathVariable("imgName") String imgName, HttpServletResponse response) throws Exception {
-		FileInputStream fis = null;
-		BufferedInputStream bis = null;
-		OutputStream out = null;
-		String UPLOAD_PATH = "C:/Users/조아라/files/"; 
-//		String UPLOAD_PATH = "C:/home/ubuntu/temp/";
+	    String UPLOAD_PATH = "C:/Users/조아라/files/"; 
+	    // String UPLOAD_PATH = "/home/ubuntu/temp/"; // 서버일 경우
 
-		try {
-			response.setContentType("image/jpeg");
-			fis = new FileInputStream(UPLOAD_PATH + imgName);
-			bis = new BufferedInputStream(fis);
-			out = response.getOutputStream();
+	    File file = new File(UPLOAD_PATH, imgName);
 
-			byte[] buffer = new byte[1024];
-			while (bis.read(buffer) != -1) {
-				out.write(buffer);
-			}
-		} finally {
-			if (bis != null) {
-				bis.close();
-			}
-			if (out != null) {
-				out.close();
-			}
-			if (fis != null) {
-				fis.close();
-			}
-		}
+	    // ✅ 파일 없으면 기본 이미지로 대체
+	    if (!file.exists()) {
+	        file = new File(UPLOAD_PATH, "default.png"); 
+	        if (!file.exists()) {
+	            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+	            return;
+	        }
+	    }
+
+	    response.setContentType("image/jpeg");
+	    try (
+	        FileInputStream fis = new FileInputStream(file);
+	        BufferedInputStream bis = new BufferedInputStream(fis);
+	        OutputStream out = response.getOutputStream()
+	    ) {
+	        byte[] buffer = new byte[1024];
+	        int length;
+	        while ((length = bis.read(buffer)) != -1) {
+	            out.write(buffer, 0, length);
+	        }
+	    }
 	}
 	
 	@Operation(summary="커미션 게시글 수정")
