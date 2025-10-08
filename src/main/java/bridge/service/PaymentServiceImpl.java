@@ -34,9 +34,9 @@ public class PaymentServiceImpl implements PaymentService{
 
 	@Override
 	public void doPayment(PaymentDto paymentDto) {
-		paymentMapper.doPayment(paymentDto);
+		paymentMapper.doPayment(paymentDto); // 결제 처리 ( partner_detail insert or update)
 		HashMap<String,Object> map = new HashMap<>();
-		paymentMapper.updateClientPoint(paymentDto);
+		paymentMapper.updateClientPoint(paymentDto); // 클라이언트 포인트 차감
 		map.put("userId",paymentDto.getClients());
 		map.put("plMoney", paymentDto.getUsepoint());
 		

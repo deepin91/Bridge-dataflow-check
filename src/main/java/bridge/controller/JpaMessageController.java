@@ -37,6 +37,14 @@ public class JpaMessageController {
     @Operation(summary="채팅 목록 조회")
     @GetMapping("/api/chatroom")
     public ResponseEntity<Map<String,Object>> chatroom(Authentication authentication){
+    	// 1. 인증 실패 상황 처리
+        if (authentication == null) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("message", "인증되지 않은 사용자입니다.");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+        }
+    	
+        // 2. 정상 처리
     	UserDto userDto = (UserDto) authentication.getPrincipal();
     	
     	// DTO(마지막 메시지 포함된)로 채팅방 목록 가져오기

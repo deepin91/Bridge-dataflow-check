@@ -179,36 +179,36 @@ public class PartnerApiController {
 //		}
 //	}
 	
-//	@Operation(summary = "커미션 목록 이미지 조회")
-//	@GetMapping("/api/getImage/{imgName}")
-//	public void getImage(@PathVariable("imgName") String imgName, HttpServletResponse response) throws Exception {
-//	    String UPLOAD_PATH = "C:/Users/조아라/files/"; 
-//	    // String UPLOAD_PATH = "/home/ubuntu/temp/"; // 서버일 경우
-//
-//	    File file = new File(UPLOAD_PATH, imgName);
-//
-//	    // ✅ 파일 없으면 기본 이미지로 대체
-//	    if (!file.exists()) {
-//	        file = new File(UPLOAD_PATH, "default.png"); 
-//	        if (!file.exists()) {
-//	            response.sendError(HttpServletResponse.SC_NOT_FOUND);
-//	            return;
-//	        }
-//	    }
-//
-//	    response.setContentType("image/jpeg");
-//	    try (
-//	        FileInputStream fis = new FileInputStream(file);
-//	        BufferedInputStream bis = new BufferedInputStream(fis);
-//	        OutputStream out = response.getOutputStream()
-//	    ) {
-//	        byte[] buffer = new byte[1024];
-//	        int length;
-//	        while ((length = bis.read(buffer)) != -1) {
-//	            out.write(buffer, 0, length);
-//	        }
-//	    }
-//	}
+	@Operation(summary = "커미션 목록 이미지 조회")
+	@GetMapping("/api/getImage/{imgName}")
+	public void getImage(@PathVariable("imgName") String imgName, HttpServletResponse response) throws Exception {
+	    String UPLOAD_PATH = "C:/Users/조아라/files/"; 
+	    // String UPLOAD_PATH = "/home/ubuntu/temp/"; // 서버일 경우
+
+	    File file = new File(UPLOAD_PATH, imgName);
+
+	    // ✅ 파일 없으면 기본 이미지로 대체
+	    if (!file.exists()) {
+	        file = new File(UPLOAD_PATH, "default.png"); 
+	        if (!file.exists()) {
+	            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+	            return;
+	        }
+	    }
+
+	    response.setContentType("image/jpeg");
+	    try (
+	        FileInputStream fis = new FileInputStream(file);
+	        BufferedInputStream bis = new BufferedInputStream(fis);
+	        OutputStream out = response.getOutputStream()
+	    ) {
+	        byte[] buffer = new byte[1024];
+	        int length;
+	        while ((length = bis.read(buffer)) != -1) {
+	            out.write(buffer, 0, length);
+	        }
+	    }
+	}
 	
 	@Operation(summary="커미션 게시글 수정")
 	@PutMapping("/api/updatePartner/{crIdx}")

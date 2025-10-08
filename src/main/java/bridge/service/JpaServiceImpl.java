@@ -31,7 +31,14 @@ public class JpaServiceImpl implements JpaService {
 	
 	@Override
 	public List<MessageEntity> getMessage(int roomIdx) {
-		return (List<MessageEntity>) jpaMessageRepository.findByRoomIdxOrderByCreatedTimeAsc(roomIdx);
+		List<MessageEntity> messages =  jpaMessageRepository.findByRoomIdxOrderByCreatedTimeAsc(roomIdx);
+		
+		System.out.println("🔎 roomIdx: " + roomIdx);
+	    System.out.println("🔎 메시지 수: " + messages.size());
+	    for (MessageEntity msg : messages) {
+	        System.out.println(" - " + msg.getWriter() + ": " + msg.getData());
+	    }
+	    return messages;
 	}
 	
 	@Override
