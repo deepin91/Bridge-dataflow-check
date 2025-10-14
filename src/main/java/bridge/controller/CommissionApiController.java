@@ -1,7 +1,6 @@
 package bridge.controller;
 
 import java.io.File;
-
 import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -30,8 +29,10 @@ import bridge.service.CommissionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.servlet.ServletOutputStream;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+
 
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 @RestController
@@ -178,14 +179,15 @@ public class CommissionApiController {
 		return ResponseEntity.status(HttpStatus.OK).body(null);
 	}
 
-	@Operation(summary="커미션 목록 삭제")
-	@PutMapping("/api/delCommissionList/{cIdx}")
-	public ResponseEntity<Object> delCommissionList(
-			@Parameter(description = "삭제할 커미션의 ID", required = true)
+	@Operation(summary="커미션 목록 삭제") 
+	@PutMapping("/api/delCommissionList/{cIdx}") 
+	public ResponseEntity<Object> delCommissionList( 
+			@Parameter(description = "삭제할 커미션의 ID", required = true) 
 			@PathVariable("cIdx") int cIdx) throws Exception {
-		commissionService.delCommissionList(cIdx);
-		return ResponseEntity.status(HttpStatus.OK).body(null);
-	}
+		commissionService.delCommissionList(cIdx); 
+		return ResponseEntity.status(HttpStatus.OK).body(null); 
+		}
+	
 
 	@Operation(summary="커미션 진행상황 완료")
 	@PutMapping("/api/commissionEnd/{cIdx}")

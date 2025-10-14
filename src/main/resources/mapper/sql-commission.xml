@@ -3,13 +3,23 @@
 
 <mapper namespace="bridge.mapper.CommissionMapper">
 
-	<select id="getCommissionList"
-		resultType="bridge.dto.CommissionDto">
+	<!-- <select id="getCommissionList" resultType="bridge.dto.CommissionDto">
 		select * from commission
-		where user_id1 = #{userId} and
-		deleted_yn = 0
-		or user_id2 = #{userId} and deleted_yn = 0
+		where (
+		(user_id1 = #{userId} and deleted_by_client = false)
+		or 
+		(user_id2 = #{userId} and deleted_by_producer = false)
+		)
 		order by c_idx DESC
+	</select> -->
+	
+	<select id="getCommissionList" resultType="bridge.dto.CommissionDto"> 
+		select * from commission 
+		where user_id1 = #{userId} 
+		and deleted_yn = 0 
+		or user_id2 = #{userId} 
+		and deleted_yn = 0 
+		order by c_idx DESC 
 	</select>
 
 	<!-- deleted_yn = 0 -->
@@ -80,7 +90,25 @@
 		update commission
 		set deleted_yn = 1
 		where c_idx = #{cIdx}
+	</update> 
+	
+	<!-- 위 delCommissionList 쿼리대로 하면 한쪽이 작업목록에서 삭제할 경우 다른쪽도 함께 삭제되므로 따로 분리함
+	<update id="deleteByClient" parameterType="int">
+		update commission
+		set deleted_by_client = 1
+		where c_idx = #{cIdx}
 	</update>
+	<update id="deleteByProducer" parameterType="int">
+		update commission
+		set deleted_by_producer = 1
+		where c_idx = #{cIdx}
+	</update>-->
+	
+	<!-- 실제 DB에서 삭제하는 쿼리 
+	<delete  id="delCommissionList" parameterType="int">
+		DELETE FROM commission WHERE c_idx = #{cIdx}
+	</delete >-->
+	
 
 	<update id="moneyToUser2"
 		parameterType="bridge.dto.CommissionDto">

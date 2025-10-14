@@ -66,6 +66,30 @@ public class CommissionServiceImpl implements CommissionService {
 	public void delCommissionList(int cIdx) {
 		commissionMapper.delCommissionList(cIdx);
 	}
+	
+//	@Override
+//	public void delCommissionList(int cIdx) {
+	
+//		CommissionDto commission = commissionMapper.getCommissionByIdx(cIdx);
+//		
+//		boolean isClient = commission.getUserId1().equals(loginUserId);
+//	    boolean isProducer = commission.getUserId2().equals(loginUserId);
+//
+//	    if (isClient) {
+//	        commissionMapper.deleteByClient(cIdx);
+//	    } else if (isProducer) {
+//	        commissionMapper.deleteByProducer(cIdx);
+//	    } else {
+//	        throw new IllegalStateException("삭제 권한이 없습니다.");
+//	    }
+	    // 삭제 표시 후 찐 삭제 조건 확인
+	    // 기존의 client/producer 둘 중 한 사람이 작업목록에서 삭제하면 양측 모두 삭제되는 로직에서
+	    // commission 테이블에 client/producer 삭제내역 컬럼을 추가하여 list를 불러올 땐 각 삭제하지 않은 목록들을 불러오고
+	    // 양측이 모두 삭제한 경우에만 DB에서 삭제되는 아래의 로직을 실행시킴 
+//	    CommissionDto updatedCommission = commissionMapper.getCommissionByIdx(cIdx);
+//	    if (updatedCommission.isDeletedByClient() && updatedCommission.getDeletedByProducer() == 1) {
+//	        commissionMapper.delCommissionList(cIdx); // 실제 삭제 (deleted_yn = 1)
+//	    }
 
 	@Override
 	public void moneyToUser2(int cIdx) {
@@ -86,5 +110,7 @@ public class CommissionServiceImpl implements CommissionService {
 	public int insertReview(ReviewDto reviewDto) {
 		return commissionMapper.insertReview(reviewDto);
 	}
+
+	
 
 }

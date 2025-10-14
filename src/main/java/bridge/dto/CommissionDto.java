@@ -12,6 +12,8 @@ public class CommissionDto {
 	private int coMoney;
 
 	private boolean deletedYn;
-	private boolean progress;
+	private int progress;
 	
+//	private boolean deletedByClient;
+//	private boolean deletedByProducer;	
 }
