@@ -12,7 +12,7 @@ public interface JpaChattingRepository extends CrudRepository<ChattingEntity, In
 	List<ChattingEntity> findByUserId1(String userId);
 	List<ChattingEntity> findByUserId2(String userId);
 	
-	Optional<ChattingEntity> findByUserId1AndUserId2(String userId1, String userId2);
+	Optional<ChattingEntity> findByUserId1AndUserId2AndCommissionIdx(String userId1, String userId2, int commissionIdx);
 //	@Query("Insert into t_chattingroom(user_id1,user_id2) values(#{userId1},#{userId2})")
 //	void insertchatting(@Param("chattingEntity") ChattingEntity chattingEntity);
 	

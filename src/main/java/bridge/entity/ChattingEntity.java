@@ -20,8 +20,17 @@ public class ChattingEntity {
 	private int roomIdx;
 	
 	@Column(nullable = false)
-	private String userId1;
+	private String userId1;	// 보통 커미션 글 작성자(의뢰인) - client
 	
 	@Column(nullable = false)
-	private String userId2;
+	private String userId2; // 제작자 - producer
+	
+	@Column(nullable = false)
+	private int commissionIdx; // 어떤 커미션글에서 생성된 채팅방인지 구분
+
+	@Column(nullable = false)
+	private String commissionWriterId; // 커미션글 작성자 ID 명시 (역할 구분용) - 프론트에서 isClient/isProducer로 판단
+
+	@Column(nullable = false)
+	private boolean active = true; // 채팅방 유효 여부 (삭제, 종료 처리용) - 협업 완료 시 방 닫을 때 사용 가능
 }

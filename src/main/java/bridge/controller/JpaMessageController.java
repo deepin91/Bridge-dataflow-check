@@ -14,6 +14,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -80,14 +81,49 @@ public class JpaMessageController {
     /* 채팅방 입장 시 이전 대화 불러오기 API */
     @Operation(summary="채팅 작성")
     @GetMapping("/api/chat/{roomIdx}")
-	public ResponseEntity<Map<String, Object>> connect(@PathVariable("roomIdx") int roomIdx){
-    	Map<String,Object> map = new HashMap<>();
-    	List<MessageEntity> MessageEntity = jpaService.getMessage(roomIdx);
-    	map.put("messagelist", MessageEntity);
-    	ChattingEntity chattingEntity = jpaService.getchatting(roomIdx);
+	public ResponseEntity<Map<String, Object>> connect(@PathVariable("roomIdx") int roomIdx,
+			Authentication authentication){
     	
-    	map.put("chatting",chattingEntity);
+    	Map<String,Object> map = new HashMap<>();
+    	
+    	// 메시지 목록
+    	List<MessageEntity> messageList = jpaService.getMessage(roomIdx);
+    	map.put("messagelist", messageList);
+    	
+    	// 채팅방 정보
+    	ChattingEntity chatInfo = jpaService.getchatting(roomIdx);
+    	map.put("chatting", chatInfo);
+    	
+    	// isClient 판단 (로그인한 사용자가 userId2인지 확인)
+    	if (authentication != null) {
+            UserDto userDto = (UserDto) authentication.getPrincipal();
+            
+            boolean isClient = !userDto.getUserId().equals(chatInfo.getCommissionWriterId());
+            map.put("isClient", isClient);
+        } else {
+            map.put("isClient", false); // 인증 없으면 기본 false
+        }
     	return ResponseEntity.status(HttpStatus.OK).body(map);
+    }
+    
+    @Operation(summary="채팅방 역할 갱신 - commissionWriterId 수정")
+    @PutMapping("/api/chat/{roomIdx}/updateRole")
+    public ResponseEntity<?> updateCommissionWriter(
+            @PathVariable int roomIdx,
+            Authentication authentication) {
+
+        // 1. 인증 체크
+        if (authentication == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        // 2. 현재 로그인한 사용자 ID 가져오기
+        String userId = ((UserDto) authentication.getPrincipal()).getUserId();
+
+        // 3. 서비스 호출 → DB에서 commissionWriterId 수정
+        jpaService.updateCommissionWriter(roomIdx, userId);
+
+        return ResponseEntity.ok().build();
     }
     
     @Operation(summary="채팅 메시지 전송 (WebSocket) - STOMP /pub/chat/message") // WebSocket 메세지는 Swagger에 뜨지 않음- 설명용으로 자세히   

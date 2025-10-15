@@ -15,10 +15,12 @@
 	
 	<select id="getCommissionList" resultType="bridge.dto.CommissionDto"> 
 		select * from commission 
-		where user_id1 = #{userId} 
-		and deleted_yn = 0 
-		or user_id2 = #{userId} 
-		and deleted_yn = 0 
+		where (
+		(user_id1 = #{userId1} 
+		and deleted_yn = 0) 
+		or (user_id2 = #{userId2} 
+		and deleted_yn = 0)
+		) 
 		order by c_idx DESC 
 	</select>
 
