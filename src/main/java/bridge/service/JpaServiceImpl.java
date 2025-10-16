@@ -31,16 +31,21 @@ public class JpaServiceImpl implements JpaService {
 
 	@Override
 	public List<MessageEntity> getMessage(int roomIdx) {
-		List<MessageEntity> messages = jpaMessageRepository.findByRoomIdxOrderByCreatedTimeAsc(roomIdx);
+		return jpaMessageRepository.findByRoomIdx(roomIdx);
 
-		System.out.println("🔎 roomIdx: " + roomIdx);
-		System.out.println("🔎 메시지 수: " + messages.size());
-		for (MessageEntity msg : messages) {
-			System.out.println(" - " + msg.getWriter() + ": " + msg.getData());
-		}
-		return messages;
+//		System.out.println("🔎 roomIdx: " + roomIdx);
+//		System.out.println("🔎 메시지 수: " + messages.size());
+//		for (MessageEntity msg : messages) {
+//			System.out.println(" - " + msg.getWriter() + ": " + msg.getData());
+//		}
+//		return messages;
 	}
 
+	@Override
+    public List<MessageEntity> getMessageOrdered(int roomIdx) {
+        return jpaMessageRepository.findByRoomIdxOrderByCreatedTimeAsc(roomIdx);
+    }
+	
 	@Override
 	public void insertData(MessageEntity messageEtity) {
 		jpaMessageRepository.save(messageEtity);
@@ -48,9 +53,8 @@ public class JpaServiceImpl implements JpaService {
 
 	@Override
 	public ChattingEntity getchatting(int roomIdx) {
-		Optional<ChattingEntity> optional = jpaChattingRepository.findById(roomIdx);
-		ChattingEntity chatting = optional.get();
-		return chatting;
+		return jpaChattingRepository.findById(roomIdx)
+                .orElseThrow(() -> new RuntimeException("채팅방을 찾을 수 없습니다."));
 	}
 
 	@Override
@@ -134,25 +138,49 @@ public class JpaServiceImpl implements JpaService {
 			chattingEntity.setUserId1(userB);
 			chattingEntity.setUserId2(userA);
 		}
-		// 💡 기존 채팅방 있는지 확인할 때, commissionIdx까지 포함해서 조회
-	    Optional<ChattingEntity> existingChatRoom = jpaChattingRepository
-	        .findByUserId1AndUserId2AndCommissionIdx(
-	            chattingEntity.getUserId1(),
-	            chattingEntity.getUserId2(),
-	            chattingEntity.getCommissionIdx()
-	        );
-
-	 // 있다면 기존 roomIdx 반환, 없다면 새 채팅방 생성
-	    return existingChatRoom.map(ChattingEntity::getRoomIdx)
-	    		.orElseGet(() -> {
+		// commissionIdx 포함 → 같은 두 사용자여도 커미션마다 방 분리
+		Optional<ChattingEntity> existingChatRoom = jpaChattingRepository
+                .findByUserId1AndUserId2AndCommissionIdx(
+                        chattingEntity.getUserId1(),
+                        chattingEntity.getUserId2(),
+                        chattingEntity.getCommissionIdx()
+                );
+		
+		if (existingChatRoom.isPresent()) return existingChatRoom.get().getRoomIdx();
+		 // 2) 없으면 생성 시도 (unique 경합 대비)
+	    try {
 	        ChattingEntity newChat = new ChattingEntity();
 	        newChat.setUserId1(chattingEntity.getUserId1());
 	        newChat.setUserId2(chattingEntity.getUserId2());
 	        newChat.setCommissionIdx(chattingEntity.getCommissionIdx());
 	        newChat.setCommissionWriterId(chattingEntity.getCommissionWriterId());
 	        return jpaChattingRepository.save(newChat).getRoomIdx();
-		});
-	}
+	    } catch (org.springframework.dao.DataIntegrityViolationException dup) {
+	        // 동시에 두 요청이 들어온 경우 등: 다시 조회해서 반환
+	        return jpaChattingRepository
+	            .findByUserId1AndUserId2AndCommissionIdx(
+	                chattingEntity.getUserId1(),
+	                chattingEntity.getUserId2(),
+	                chattingEntity.getCommissionIdx()
+	            )
+	            .map(ChattingEntity::getRoomIdx)
+	            .orElseThrow(() -> dup);
+	    }
+//		 return existingChatRoom.map(ChattingEntity::getRoomIdx)
+//	                .orElseGet(() -> jpaChattingRepository.save(chattingEntity).getRoomIdx());
+	    }
+
+//	 // 있다면 기존 roomIdx 반환, 없다면 새 채팅방 생성
+//	    return existingChatRoom.map(ChattingEntity::getRoomIdx)
+//	    		.orElseGet(() -> {
+//	        ChattingEntity newChat = new ChattingEntity();
+//	        newChat.setUserId1(chattingEntity.getUserId1());
+//	        newChat.setUserId2(chattingEntity.getUserId2());
+//	        newChat.setCommissionIdx(chattingEntity.getCommissionIdx());
+//	        newChat.setCommissionWriterId(chattingEntity.getCommissionWriterId());
+//	        return jpaChattingRepository.save(newChat).getRoomIdx();
+//		});
+//	}
 
 //		List<ChattingEntity> direct = jpaChattingRepository.findByUserId1AndUserId2(userA, userB);
 //		List<ChattingEntity> reverse = jpaChattingRepository.findByUserId1AndUserId2(userB, userA);
@@ -162,20 +190,21 @@ public class JpaServiceImpl implements JpaService {
 
 	
 	@Override
-	@Transactional
-	public void updateCommissionWriter(int roomIdx, String newWriterId) {
-	    ChattingEntity entity = jpaChattingRepository.findById(roomIdx)
-	        .orElseThrow(() -> new RuntimeException("채팅방을 찾을 수 없습니다."));
-	    
-	    entity.setCommissionWriterId(newWriterId);
-	    jpaChattingRepository.save(entity); // 필수는 아니지만 명시적 저장
-	}
+    @Transactional
+    public void updateCommissionWriter(int roomIdx, String newWriterId) {
+        // 역할 오염 방지 목적: 사용 금지. 필요 시 관리자만 허용하도록 추가 검증.
+        ChattingEntity entity = jpaChattingRepository.findById(roomIdx)
+                .orElseThrow(() -> new RuntimeException("채팅방을 찾을 수 없습니다."));
+        // no-op 또는 감사 로깅만 남기고 종료
+        // entity.setCommissionWriterId(newWriterId); // 🚫 사용 금지
+    }
 	
 	/*
 	 * 다른 메서드들은 CRUD 중심이라 별다른 처리 로직이 없지만 아래의 메서드는 중복 제거 및 정렬 + 마지막 메세지에 대한 데이터를
 	 * 뽑아내야하는 등 여러 과정이 필요하기 때문에 보다 간단 명료하고 효율적인 코드 작성을 위해 (구현을 위해) Stream API와
 	 * Comparator 체이닝을 활용함
 	 */
+	
 	// 기능 특성상 정렬, 중복 제거, DTO 변환이 필요한 메서드라 단순 반복문보다 Stream 체이닝 방식이 더 적합
 	@Override
 	public List<ChattingRoomLastMessageDto> getChattingRoomMessage(String userId) {
@@ -199,9 +228,12 @@ public class JpaServiceImpl implements JpaService {
 													// chatRoom객체로 반복문을 수행하는 것
 			int roomIdx = chatRoom.getRoomIdx(); // 현재 채팅방 index 추출
 
+			// ✅ 정렬 보장 버전 사용
+            List<MessageEntity> messages = jpaMessageRepository.findByRoomIdxOrderByCreatedTimeAsc(roomIdx);
+            
 			// 해당 채팅방(roomIdx)의 모든 메시지를 조회
 			// (해당 채팅방의 메시지 중 가장 마지막 메시지 (createdTime 기준으로 가장 마지막))
-			List<MessageEntity> messages = jpaMessageRepository.findByRoomIdx(roomIdx);
+//			List<MessageEntity> messages = jpaMessageRepository.findByRoomIdx(roomIdx);
 
 			// 메시지가 없는 경우를 대비한 기본값 초기화
 			String lastMessage = "";
@@ -225,9 +257,10 @@ public class JpaServiceImpl implements JpaService {
 			result.add(chattingRoomLastMessageDto);
 		}
 		// 채팅방 목록을 마지막 메세지 시간 기준으로 정렬(최신순)
-		result.sort(Comparator.comparing(ChattingRoomLastMessageDto::getLastSentTime, // 클래스명::메서드명 or 인스턴스::메서드명 형태
-																						// --람다식 간단히 줄여쓴 문법
-				Comparator.nullsLast(Comparator.reverseOrder()))); // Comparator.comparing(dto -> dto.getLastSentTime())
+		result.sort(Comparator.comparing(
+				ChattingRoomLastMessageDto::getLastSentTime, // 클래스명::메서드명 or 인스턴스::메서드명 형태 																		// --람다식 간단히 줄여쓴 문법
+				Comparator.nullsLast(Comparator.reverseOrder())
+				)); // Comparator.comparing(dto -> dto.getLastSentTime())
 																	// 이걸 간단하게 표현한 것
 		// Comparator.comparing(...) - 특정 필드를 기준으로 비교하겠다
 		// ChattingRoomLastMessageDto::getLastSentTime - 정렬 기준 필드
