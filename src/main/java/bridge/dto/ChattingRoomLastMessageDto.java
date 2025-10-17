@@ -14,6 +14,7 @@ public class ChattingRoomLastMessageDto {
 	
 	private String lastMessage;
 	private LocalDateTime lastSentTime;
+	private boolean active;
 }
 
 // 해당 DTO는 DB 테이블과 1:1 매핑되는 게 아닌 응답 전용으로 사용되는 객체

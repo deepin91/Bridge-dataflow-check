@@ -121,22 +121,28 @@ public class JpaMessageController {
 	@GetMapping("/api/chatroom/list")
 	public ResponseEntity<List<ChattingRoomLastMessageDto>> chatroomWithLastMessage(Authentication authentication) {
 		if (authentication == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+		}
 		UserDto userDto = (UserDto) authentication.getPrincipal();
 		List<ChattingRoomLastMessageDto> result = jpaService.getChattingRoomMessage(userDto.getUserId());
 		return ResponseEntity.ok(result);
 	}
 
 	// ⚠️ 레거시: 역할 변경 API — 사용 금지 권고 (commission 작성자는 바뀌면 안 됨)
-    @Operation(summary="(레거시) 채팅방 역할 갱신 - commissionWriterId 수정 (사용 비권장)")
-    @PutMapping("/api/chat/{roomIdx}/updateRole")
-    public ResponseEntity<?> updateCommissionWriter(@PathVariable int roomIdx, Authentication authentication) {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body("commissionWriterId는 커미션 글 작성자로 고정되어야 합니다. 이 API 사용을 중지하세요.");
-    }
-}
+	@Operation(summary = "(레거시) 채팅방 역할 갱신 - commissionWriterId 수정 (사용 비권장)")
+	@PutMapping("/api/chat/{roomIdx}/updateRole")
+	public ResponseEntity<?> updateCommissionWriter(@PathVariable int roomIdx, Authentication authentication) {
+		return ResponseEntity.status(HttpStatus.FORBIDDEN)
+				.body("commissionWriterId는 커미션 글 작성자로 고정되어야 합니다. 이 API 사용을 중지하세요.");
+	}
 
+	@Operation(summary = "채팅방 비활성화 (작업 완료)")
+	@PutMapping("/api/chat/{roomIdx}/close")
+	public ResponseEntity<String> closeChatRoom(@PathVariable("roomIdx") int roomIdx) {
+		jpaService.closeChatRoom(roomIdx);
+		return ResponseEntity.ok("채팅방이 종료되었습니다.");
+	}
+}
 //	@Operation(summary="채팅방 역할 갱신 - commissionWriterId 수정")
 //	@PutMapping("/api/chat/{roomIdx}/updateRole")
 //	public ResponseEntity<?> updateCommissionWriter(

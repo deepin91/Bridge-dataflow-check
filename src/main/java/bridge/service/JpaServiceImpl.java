@@ -47,8 +47,16 @@ public class JpaServiceImpl implements JpaService {
     }
 	
 	@Override
-	public void insertData(MessageEntity messageEtity) {
-		jpaMessageRepository.save(messageEtity);
+	public void insertData(MessageEntity messageEntity) {
+		int roomIdx = messageEntity.getRoomIdx();
+
+	    ChattingEntity chatRoom = jpaChattingRepository.findById(roomIdx)
+	        .orElseThrow(() -> new RuntimeException("채팅방을 찾을 수 없습니다."));
+
+	    if (!chatRoom.isActive()) {
+	        throw new IllegalStateException("❌ 이 채팅방은 작업 완료되어 더 이상 메시지를 보낼 수 없습니다.");
+	    }
+		jpaMessageRepository.save(messageEntity);
 	}
 
 	@Override
@@ -139,14 +147,16 @@ public class JpaServiceImpl implements JpaService {
 			chattingEntity.setUserId2(userA);
 		}
 		// commissionIdx 포함 → 같은 두 사용자여도 커미션마다 방 분리
-		Optional<ChattingEntity> existingChatRoom = jpaChattingRepository
-                .findByUserId1AndUserId2AndCommissionIdx(
+		Optional<ChattingEntity> existingChatRoom = 
+				jpaChattingRepository.findByUserId1AndUserId2AndCommissionIdx(
                         chattingEntity.getUserId1(),
                         chattingEntity.getUserId2(),
                         chattingEntity.getCommissionIdx()
                 );
 		
-		if (existingChatRoom.isPresent()) return existingChatRoom.get().getRoomIdx();
+		if (existingChatRoom.isPresent()) {
+			return existingChatRoom.get().getRoomIdx();
+		}
 		 // 2) 없으면 생성 시도 (unique 경합 대비)
 	    try {
 	        ChattingEntity newChat = new ChattingEntity();
@@ -252,6 +262,7 @@ public class JpaServiceImpl implements JpaService {
 			chattingRoomLastMessageDto.setUserId2(chatRoom.getUserId2());
 			chattingRoomLastMessageDto.setLastMessage(lastMessage);
 			chattingRoomLastMessageDto.setLastSentTime(lastSentTime);
+			chattingRoomLastMessageDto.setActive(chatRoom.isActive());
 
 			// 결과 리스트에 추가
 			result.add(chattingRoomLastMessageDto);
@@ -276,26 +287,20 @@ public class JpaServiceImpl implements JpaService {
 
 		return result; // <-- 모든 채팅방에 대해 DTO 리스트 반환
 	}
-} // <-- GET /api/chatroom/list 요청 시 로그인한 사용자의 모든 채팅방 리스트가 불려옴 > 각 채팅방의 roomIdx,
+
+	@Override
+	@Transactional
+	public void closeChatRoom(int roomIdx) {
+		jpaChattingRepository.findById(roomIdx).ifPresent(chat -> { //람다식 - 변수선언 하지 않고 바로 정의된 매개변수 사용 가능
+	        chat.setActive(false);
+	        jpaChattingRepository.save(chat);
+	    });
+	}
+} 
 	// 대화상대, 마지막 메세지, 시간 까지 응답
 	// 읽음처리는 추후 설정 고려중
 	// *****프론트에서 실시간으로 채팅목록 (최신순으로) 정렬하려면 따로 설정해야함****
 
-//	@Override
-//	public void openChat(ChattingEntity chattingEntity) {
-//		String userA =  chattingEntity.getUserId1();
-//		String userB = chattingEntity.getUserId2();
-//		
-//		boolean isDuplicateRoom = 
-//				!jpaChattingRepository.findByUserId1AndUserId2(userA, userB).isEmpty() ||
-//				!jpaChattingRepository.findByUserId1AndUserId2(userB, userA).isEmpty();
-//		if(!isDuplicateRoom) {
-//			System.out.println("새로운 채팅방 생성");
-//			jpaChattingRepository.save(chattingEntity);
-//		} else {
-//			System.out.println("이미 존재하는 채팅방입니다.");
-//		}
-//	}
 
 /* stream().forEach() - 단순 반복뿐 아니라 필터링, 변환, 정렬 등을 자유롭게 다룰 수 있음 */
 

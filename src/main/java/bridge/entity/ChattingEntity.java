@@ -17,6 +17,7 @@ public class ChattingEntity {
 	@Id	//엔티티의 기본키(PK)
 	@GeneratedValue(strategy = GenerationType.IDENTITY) // MySQL과 H2(테스트) 호환되도록 변경 -- 09/15
 //	@GeneratedValue(strategy= GenerationType.AUTO)	// 기본키 생성 전략 (DB에서 제공하는 키 생성 전략을 따른다)
+	@Column(name = "room_idx")
 	private int roomIdx;
 	
 	@Column(nullable = false)

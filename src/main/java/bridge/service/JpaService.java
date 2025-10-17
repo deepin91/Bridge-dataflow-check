@@ -12,7 +12,7 @@ public interface JpaService {
 	// 정렬 보장 버전
 	List<MessageEntity> getMessageOrdered(int roomIdx);
     
-	void insertData(MessageEntity messageEtity);
+	void insertData(MessageEntity messageEntity);
 	ChattingEntity getchatting(int roomIdx);
 	List<ChattingEntity> getChattingRoom(String userId);
 	
@@ -31,5 +31,5 @@ public interface JpaService {
 	// openOrFindChat() 메서드 추가해서 동일 유저끼리의 채팅방이 존재하는지 확인 후 있으면 기존 채팅 대화 이어나가기
 	// 없는경우 새로운 채팅방 생성하도록 처리
 	void updateCommissionWriter(int roomIdx, String newWriterId);
-	
+	void closeChatRoom(int roomIdx);
 }
