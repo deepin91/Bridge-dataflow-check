@@ -142,7 +142,57 @@ public class JpaMessageController {
 		jpaService.closeChatRoom(roomIdx);
 		return ResponseEntity.ok("채팅방이 종료되었습니다.");
 	}
-}
+
+	@Operation(summary = "채팅 읽음 처리 (개별)")
+	@PutMapping("/api/chat/read/{messageIdx}")
+	public ResponseEntity<?> markAsRead(@PathVariable int messageIdx, Authentication authentication){
+		if(authentication == null) {
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인 필요");
+		}
+		UserDto user = (UserDto) authentication.getPrincipal();
+		jpaService.markMessagesAsRead(messageIdx, user.getUserId());
+		
+		return ResponseEntity.ok("단일 메세지 읽음 처리 완료");
+	}
+	
+	@Operation(summary ="읽지 않은 메세지 수 카운트(조회)")
+	@GetMapping("/api/chat/{roomIdx}/unread")
+	public ResponseEntity<Integer> getUnreadCount(@PathVariable("roomIdx") int roomIdx, Authentication authentication){
+		if(authentication == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+		UserDto user = (UserDto) authentication.getPrincipal();
+		int count = jpaService.countUnreadMessages(roomIdx, user.getUserId());
+		return ResponseEntity.ok(count);
+	}
+	
+	@Operation(summary = "채팅 읽음 처리 (일괄)")
+	@PutMapping("/api/chat/{roomIdx}/read")
+	public ResponseEntity<?> markMessagesReadAll(@PathVariable("roomIdx") int roomIdx, 
+			@RequestBody Map<String, Integer> body,
+			Authentication authentication) {
+		
+		if(authentication == null) {
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
+		}
+		String userId = ((UserDto) authentication.getPrincipal()).getUserId();
+		Integer lastReadMessageIdx = body.get("lastReadMessageIdx");
+		
+		if(lastReadMessageIdx == null) {
+			return ResponseEntity.badRequest().body("lastReadMessageIdx 누락됨");
+		}
+		jpaService.markMessagesAsReadUpTo(roomIdx, userId, lastReadMessageIdx);
+		return ResponseEntity.ok("채팅방 메세지 읽음 일괄처리 완료");	
+	}
+	
+	@Operation
+	@GetMapping("/api/chat/unread/{roomIdx}")
+	public int countUnreadMessages(@PathVariable("roomIdx") int roomIdx, Authentication authentication) {
+		String userId = ((UserDto) authentication.getPrincipal()).getUserId();
+		return jpaService.countUnreadMessages(roomIdx, userId);
+	}
+	
+	
+	
+}	
 //	@Operation(summary="채팅방 역할 갱신 - commissionWriterId 수정")
 //	@PutMapping("/api/chat/{roomIdx}/updateRole")
 //	public ResponseEntity<?> updateCommissionWriter(

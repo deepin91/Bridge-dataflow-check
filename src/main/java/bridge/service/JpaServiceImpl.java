@@ -16,9 +16,13 @@ import bridge.dto.ChattingRoomLastMessageDto;
 import bridge.dto.NoticeDto;
 import bridge.entity.ChattingEntity;
 import bridge.entity.MessageEntity;
+import bridge.entity.MessageRead;
+import bridge.entity.MessageReadId;
 import bridge.mapper.NoticeMapper;
 import bridge.repository.JpaChattingRepository;
 import bridge.repository.JpaMessageRepository;
+import bridge.repository.MessageReadRepository;
+import bridge.repository.MessageRepository;
 
 @Service
 public class JpaServiceImpl implements JpaService {
@@ -26,6 +30,10 @@ public class JpaServiceImpl implements JpaService {
 	private JpaMessageRepository jpaMessageRepository;
 	@Autowired
 	private JpaChattingRepository jpaChattingRepository;
+	@Autowired
+	private MessageReadRepository messageReadRepository;
+	@Autowired
+	private MessageRepository messageRepository;
 	@Autowired
 	private NoticeMapper noticeMapper;
 
@@ -295,6 +303,32 @@ public class JpaServiceImpl implements JpaService {
 	        chat.setActive(false);
 	        jpaChattingRepository.save(chat);
 	    });
+	}
+	@Override
+	@Transactional
+	public void markMessagesAsRead(int messageIdx, String userId) {
+			if (!messageReadRepository.existsByIdMessageIdxAndIdUserId(messageIdx, userId)) {
+				MessageRead read = new MessageRead();
+				read.setId(new MessageReadId(messageIdx, userId));
+				read.setReadAt(LocalDateTime.now());
+				messageReadRepository.save(read);
+			}
+	}
+	
+	@Override
+	@Transactional
+	public void markMessagesAsReadUpTo(int roomIdx, String userId, int lastReadMessageIdx) {
+		List<MessageEntity> messages = jpaMessageRepository.findByRoomIdxOrderByCreatedTimeAsc(roomIdx);
+		for(MessageEntity m : messages) {
+			if(m.getMessageIdx() <= lastReadMessageIdx) {
+				markMessagesAsRead(m.getMessageIdx(), userId);
+			}
+		}
+	}
+	
+	@Override
+	public int countUnreadMessages(int roomIdx, String userId) {
+		return messageRepository.countUnreadMessages(roomIdx, userId);
 	}
 } 
 	// 대화상대, 마지막 메세지, 시간 까지 응답

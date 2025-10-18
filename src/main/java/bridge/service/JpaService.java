@@ -32,4 +32,8 @@ public interface JpaService {
 	// 없는경우 새로운 채팅방 생성하도록 처리
 	void updateCommissionWriter(int roomIdx, String newWriterId);
 	void closeChatRoom(int roomIdx);
+	
+	void markMessagesAsRead(int messageIdx, String userId);
+	void markMessagesAsReadUpTo(int roomIdx, String userId, int lastReadMessageIdx);
+	int countUnreadMessages(int roomIdx, String userId);
 }
