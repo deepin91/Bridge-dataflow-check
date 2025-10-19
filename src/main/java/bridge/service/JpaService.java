@@ -12,7 +12,7 @@ public interface JpaService {
 	// 정렬 보장 버전
 	List<MessageEntity> getMessageOrdered(int roomIdx);
     
-	void insertData(MessageEntity messageEntity);
+	MessageEntity insertData(MessageEntity messageEntity);
 	ChattingEntity getchatting(int roomIdx);
 	List<ChattingEntity> getChattingRoom(String userId);
 	

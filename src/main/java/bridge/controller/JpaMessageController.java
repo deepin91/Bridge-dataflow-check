@@ -111,10 +111,17 @@ public class JpaMessageController {
 		// 메시지 전처리: 시간 설정
 		message.setCreatedTime(LocalDateTime.now());
 		message.setSentAt(LocalDateTime.now());
-		// DB 저장
-		jpaService.insertData(message);
+//		// DB 저장
+//		jpaService.insertData(message);
+		
+		// 저장 후 저장된 Entity(자동 생성된 messageIdx 포함)를 반환받음
+		MessageEntity savedMessage = jpaService.insertData(message); // 저장 후 반환
+		System.out.println("📩 저장된 메시지: idx=" + savedMessage.getMessageIdx() + ", writer=" + savedMessage.getWriter());
+		
+		// 저장된 메시지를 그대로 브로드캐스트 (writer, messageIdx 포함)
+		simpMessageSendingOperations.convertAndSend("/sub/channel/" + savedMessage .getRoomIdx(), savedMessage );
 		// 메시지 브로드캐스트 (구독자들에게 전달)
-		simpMessageSendingOperations.convertAndSend("/sub/channel/" + message.getRoomIdx(), message);
+//		simpMessageSendingOperations.convertAndSend("/sub/channel/" + message.getRoomIdx(), message);
 	}
 
 	@Operation(summary = "채팅방 목록 (마지막 메시지 포함)")
@@ -145,7 +152,7 @@ public class JpaMessageController {
 
 	@Operation(summary = "채팅 읽음 처리 (개별)")
 	@PutMapping("/api/chat/read/{messageIdx}")
-	public ResponseEntity<?> markAsRead(@PathVariable int messageIdx, Authentication authentication){
+	public ResponseEntity<?> markAsRead(@PathVariable("messageIdx") int messageIdx, Authentication authentication){
 		if(authentication == null) {
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인 필요");
 		}

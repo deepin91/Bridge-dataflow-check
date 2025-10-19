@@ -55,7 +55,7 @@ public class JpaServiceImpl implements JpaService {
     }
 	
 	@Override
-	public void insertData(MessageEntity messageEntity) {
+	public MessageEntity insertData(MessageEntity messageEntity) {
 		int roomIdx = messageEntity.getRoomIdx();
 
 	    ChattingEntity chatRoom = jpaChattingRepository.findById(roomIdx)
@@ -64,7 +64,7 @@ public class JpaServiceImpl implements JpaService {
 	    if (!chatRoom.isActive()) {
 	        throw new IllegalStateException("❌ 이 채팅방은 작업 완료되어 더 이상 메시지를 보낼 수 없습니다.");
 	    }
-		jpaMessageRepository.save(messageEntity);
+	    return jpaMessageRepository.save(messageEntity);  // 저장된 객체 반환
 	}
 
 	@Override
