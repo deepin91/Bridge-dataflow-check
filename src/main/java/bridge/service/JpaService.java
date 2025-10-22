@@ -36,4 +36,6 @@ public interface JpaService {
 	void markMessagesAsRead(int messageIdx, String userId);
 	void markMessagesAsReadUpTo(int roomIdx, String userId, int lastReadMessageIdx);
 	int countUnreadMessages(int roomIdx, String userId);
+	//--- 상단 네비바에 채팅 알림 표시하기 위함(안읽은 모든 메세지 수 총합 노출) 
+	int countUnreadMessagesAll(String userId); // 전체 읽지 않은 메시지 수
 }

@@ -197,8 +197,18 @@ public class JpaMessageController {
 		return jpaService.countUnreadMessages(roomIdx, userId);
 	}
 	
-	
-	
+	//--- 상단 네비바에 채팅 알림 표시하기 위함(안읽은 모든 메세지 수 총합 노출) 
+	@Operation(summary = "전체 읽지 않은 메시지 개수 반환")
+	@GetMapping("/api/chat/unread-count")
+	public ResponseEntity<Integer> getTotalUnreadCount(Authentication authentication) {
+	    if (authentication == null) {
+	        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+	    }
+
+	    String userId = ((UserDto) authentication.getPrincipal()).getUserId();
+	    int totalUnread = jpaService.countUnreadMessagesAll(userId);
+	    return ResponseEntity.ok(totalUnread);
+	}
 }	
 //	@Operation(summary="채팅방 역할 갱신 - commissionWriterId 수정")
 //	@PutMapping("/api/chat/{roomIdx}/updateRole")

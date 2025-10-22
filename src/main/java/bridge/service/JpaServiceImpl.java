@@ -272,14 +272,24 @@ public class JpaServiceImpl implements JpaService {
 			chattingRoomLastMessageDto.setLastSentTime(lastSentTime);
 			chattingRoomLastMessageDto.setActive(chatRoom.isActive());
 
+			// 채팅방 생성 시간 설정
+			chattingRoomLastMessageDto.setCreatedAt(chatRoom.getCreatedAt()); 
 			// 결과 리스트에 추가
 			result.add(chattingRoomLastMessageDto);
 		}
-		// 채팅방 목록을 마지막 메세지 시간 기준으로 정렬(최신순)
-		result.sort(Comparator.comparing(
-				ChattingRoomLastMessageDto::getLastSentTime, // 클래스명::메서드명 or 인스턴스::메서드명 형태 																		// --람다식 간단히 줄여쓴 문법
-				Comparator.nullsLast(Comparator.reverseOrder())
-				)); // Comparator.comparing(dto -> dto.getLastSentTime())
+
+		// 정렬 기준 수정: lastSentTime이 없으면 createdAt 기준
+	    result.sort(Comparator.comparing(
+	            dto -> dto.getLastSentTime() != null ? dto.getLastSentTime() : dto.getCreatedAt(),
+	            Comparator.reverseOrder()
+	    ));
+		// ↓ 아래의 방식대로하면 새로생긴 채팅방이 최하단으로 밀리는 현상이 발생
+		// 다른 채팅방에서 보낸 메세지가 있어도 그 후에 채팅방이 새로 생성되면 마지막 메세지 시간과 새로운 채팅방 생성 시간을 비교해서 
+		// 최신순 정렬 
+		
+//				ChattingRoomLastMessageDto::getLastSentTime, // 클래스명::메서드명 or 인스턴스::메서드명 형태 																		// --람다식 간단히 줄여쓴 문법
+//				Comparator.nullsLast(Comparator.reverseOrder())
+//				)); // Comparator.comparing(dto -> dto.getLastSentTime())
 																	// 이걸 간단하게 표현한 것
 		// Comparator.comparing(...) - 특정 필드를 기준으로 비교하겠다
 		// ChattingRoomLastMessageDto::getLastSentTime - 정렬 기준 필드
@@ -307,7 +317,7 @@ public class JpaServiceImpl implements JpaService {
 	@Override
 	@Transactional
 	public void markMessagesAsRead(int messageIdx, String userId) {
-			if (!messageReadRepository.existsByIdMessageIdxAndIdUserId(messageIdx, userId)) {
+			if (!messageReadRepository.existsById_MessageIdxAndId_UserId(messageIdx, userId)) {
 				MessageRead read = new MessageRead();
 				read.setId(new MessageReadId(messageIdx, userId));
 				read.setReadAt(LocalDateTime.now());
@@ -329,6 +339,11 @@ public class JpaServiceImpl implements JpaService {
 	@Override
 	public int countUnreadMessages(int roomIdx, String userId) {
 		return messageRepository.countUnreadMessages(roomIdx, userId);
+	}
+
+	@Override
+	public int countUnreadMessagesAll(String userId) {
+		return messageRepository.countUnreadMessagesForUserAcrossRooms(userId);
 	}
 } 
 	// 대화상대, 마지막 메세지, 시간 까지 응답

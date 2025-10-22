@@ -11,7 +11,7 @@ import bridge.entity.MessageReadId;
 public interface MessageReadRepository extends JpaRepository<MessageRead, MessageReadId> {
 //	boolean existByMessageIdxAndUserId(int messageIdx, String userId);
 //	boolean existsByIdMessageIdxAndUserId(int messageIdx, String userId);
-	boolean existsByIdMessageIdxAndIdUserId(int messageIdx, String userId);
+	boolean existsById_MessageIdxAndId_UserId(int messageIdx, String userId);
 //	List<MessageRead> findByUserId(String userId);
 	
 	@Query("""
@@ -25,9 +25,13 @@ public interface MessageReadRepository extends JpaRepository<MessageRead, Messag
 	              AND r.id.userId = :userId
 	        )
 	    """)
-	    int countUnreadMessages(int roomIdx, String userId);
+	    int countUnreadMessages(int roomIdx, String userId); 
+
+//	int countByUserIdAndIsReadFalse(String userId); // 전체 안 읽은 메시지 수
 
 	
+    int countById_UserId(String userId); // 전체 안 읽은 메시지 수
+    int countById_UserIdAndId_MessageIdx(String userId, int messageIdx);// 특정 메시지 읽음 여부 확인 (선택적)
 	
 }
 

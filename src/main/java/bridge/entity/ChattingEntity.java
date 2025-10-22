@@ -1,5 +1,7 @@
 package bridge.entity;
 
+import java.time.LocalDateTime;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -34,4 +36,14 @@ public class ChattingEntity {
 
 	@Column(nullable = false)
 	private boolean active = true; // 채팅방 유효 여부 (삭제, 종료 처리용) - 협업 완료 시 방 닫을 때 사용 가능
+	
+	@Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt; // 나눈 메세지는 없지만 새로 생성된 채팅방이 채팅목록 최상단으로 배치되어야 할 때
+	
+//	@PrePersist
+//	protected void onCreate() {
+//	    this.createdAt = LocalDateTime.now();  
+//	이건 DB에 insert 직전, 즉 repository.save()가 호출될 때 실행됨 = 정확하게 DB에 저장된 시점이 남음 
+//	추후 적용 ㄱㄱ
+//	}
 }
