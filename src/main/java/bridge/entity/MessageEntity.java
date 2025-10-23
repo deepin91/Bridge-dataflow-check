@@ -27,7 +27,7 @@ public class MessageEntity {
 	
 	@Column(nullable = false)
 //	private int channelId;
-	private String data;
+	private String data; // 메시지 내용
 	
 	@Column(nullable = false)
 //	@ManyToOne(targetEntity = ChattingEntity.class)
@@ -38,7 +38,7 @@ public class MessageEntity {
 	private LocalDateTime sentAt = LocalDateTime.now();
 	
 	@Column(nullable = false)
-	private LocalDateTime createdTime = LocalDateTime.now();
+	private LocalDateTime createdTime = LocalDateTime.now(); // 메시지 발송 시간
 }	
 
 	/*

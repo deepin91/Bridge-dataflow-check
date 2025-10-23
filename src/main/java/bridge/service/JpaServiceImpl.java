@@ -26,20 +26,23 @@ import bridge.repository.MessageRepository;
 
 @Service
 public class JpaServiceImpl implements JpaService {
+	// Repository 및 Mapper 의존성 주입
 	@Autowired
-	private JpaMessageRepository jpaMessageRepository;
+	private JpaMessageRepository jpaMessageRepository; // 채팅 메시지 저장 및 조회
 	@Autowired
-	private JpaChattingRepository jpaChattingRepository;
+	private JpaChattingRepository jpaChattingRepository; // 채팅방 생성 및 조회
 	@Autowired
-	private MessageReadRepository messageReadRepository;
+	private MessageReadRepository messageReadRepository; // 메시지 읽음 여부 처리
 	@Autowired
-	private MessageRepository messageRepository;
+	private MessageRepository messageRepository; // JPQL 기반 복잡 쿼리 수행용
 	@Autowired
-	private NoticeMapper noticeMapper;
+	private NoticeMapper noticeMapper; // 공지사항 관련 MyBatis Mapper
 
+	
+	/* 해당 채팅방(roomIdx)의 전체 메시지를 가져옴 */
 	@Override
 	public List<MessageEntity> getMessage(int roomIdx) {
-		return jpaMessageRepository.findByRoomIdx(roomIdx);
+		return jpaMessageRepository.findByRoomIdx(roomIdx); // 정렬되지 않은 메시지 리스트 반환
 
 //		System.out.println("🔎 roomIdx: " + roomIdx);
 //		System.out.println("🔎 메시지 수: " + messages.size());
@@ -48,31 +51,35 @@ public class JpaServiceImpl implements JpaService {
 //		}
 //		return messages;
 	}
-
+	
+	/* 해당 채팅방 메시지를 생성시간 기준 오름차순으로 정렬해서 조회 */ // 채팅방 입장 시 메시지를 위에서 아래로 시간 순으로 정렬해서 출력
 	@Override
     public List<MessageEntity> getMessageOrdered(int roomIdx) {
         return jpaMessageRepository.findByRoomIdxOrderByCreatedTimeAsc(roomIdx);
     }
 	
+	/* 메시지를 채팅방에 저장 */
 	@Override
 	public MessageEntity insertData(MessageEntity messageEntity) {
-		int roomIdx = messageEntity.getRoomIdx();
+		int roomIdx = messageEntity.getRoomIdx(); //messageEntity의 getRoomIdx메서드를 호출 > roomIdx에 담고
 
-	    ChattingEntity chatRoom = jpaChattingRepository.findById(roomIdx)
-	        .orElseThrow(() -> new RuntimeException("채팅방을 찾을 수 없습니다."));
+	    ChattingEntity chatRoom = jpaChattingRepository.findById(roomIdx) // 그 값(roomIdx)으로 채팅방 조회 > 없으면 RuntimeException 예외 던짐
+	        .orElseThrow(() -> new RuntimeException("채팅방을 찾을 수 없습니다.")); // 있으면 ChattingEntity타입의 변수 chatRoom에 담음
 
-	    if (!chatRoom.isActive()) {
+	    if (!chatRoom.isActive()) { // 해당 방(chatRoom)이 비활성(작업 완료) 상태면 메시지 전송을 차단하고 예외를 던짐
 	        throw new IllegalStateException("❌ 이 채팅방은 작업 완료되어 더 이상 메시지를 보낼 수 없습니다.");
 	    }
-	    return jpaMessageRepository.save(messageEntity);  // 저장된 객체 반환
+	    return jpaMessageRepository.save(messageEntity);  // 메시지를 DB에 저장 > 저장된 엔티티(보통 PK 등 채워진 상태) 를 그대로 반환.
 	}
 
+	/* 채팅방 단건 조회 -- 이거 실제 사용중인지 확인 필 */
 	@Override
 	public ChattingEntity getchatting(int roomIdx) {
-		return jpaChattingRepository.findById(roomIdx)
+		return jpaChattingRepository.findById(roomIdx) // 주어진 roomIdx로 채팅방 검색
                 .orElseThrow(() -> new RuntimeException("채팅방을 찾을 수 없습니다."));
 	}
 
+	/* 유저가 속한 모든 채팅방 조회 - userId가 user1이거나 user2인 모든 채팅방 검색 */
 	@Override
 	public List<ChattingEntity> getChattingRoom(String userId) {
 		List<ChattingEntity> a = jpaChattingRepository.findByUserId1(userId);
@@ -90,6 +97,7 @@ public class JpaServiceImpl implements JpaService {
 		return all;
 	}
 
+	/* 공지사항 관련 API */
 	@Override
 	public List<NoticeDto> noticeList() throws Exception {
 		return noticeMapper.noticeList();
@@ -144,28 +152,34 @@ public class JpaServiceImpl implements JpaService {
 //        System.out.println(">>>>>>>>>>>오픈챗 서비스 나옴");
 //    }
 
+	/* 채팅방 생성 or 기존 채팅방 재입장 + 채팅방 정렬 및 마지막 메시지 처리 */
 	@Override
-	public int openOrFindChat(ChattingEntity chattingEntity) {
+	public int openOrFindChat(ChattingEntity chattingEntity) { // 채팅방을 찾거나(있으면) 새로 만들고(없으면) 그 roomIdx를 반환
 		String userA = chattingEntity.getUserId1(); // 누가 누구든 상관 없이 정렬용
 		String userB = chattingEntity.getUserId2();
 
-		// 채팅방 중복 방지
-		if (userA.compareTo(userB) > 0) {
+		// 채팅방 중복 방지 - 알파벳 순 정렬
+		if (userA.compareTo(userB) > 0) { // 두 ID를 사전순(알파벳) 으로 정렬 - A–B”와 “B–A”가 동일 키로 취급해 같은 두 사람 사이 방이 중복 생성되는 걸 막음 / compareTo가 0이면(동일 아이디) 바꾸지 않음
 			chattingEntity.setUserId1(userB);
 			chattingEntity.setUserId2(userA);
 		}
-		// commissionIdx 포함 → 같은 두 사용자여도 커미션마다 방 분리
+		/* commissionIdx 포함 → 같은 두 사용자여도 commissionIdx 다르면 다른 방 */
+		// 정렬이 적용된 userId1, userId2와 commissionIdx로 기존 방 존재 여부 조회
 		Optional<ChattingEntity> existingChatRoom = 
 				jpaChattingRepository.findByUserId1AndUserId2AndCommissionIdx(
                         chattingEntity.getUserId1(),
                         chattingEntity.getUserId2(),
                         chattingEntity.getCommissionIdx()
                 );
-		
+		// 이미 방이 존재하면 새로 만들지 않고 해당 방의 roomIdx를 반환 후 종료
 		if (existingChatRoom.isPresent()) {
 			return existingChatRoom.get().getRoomIdx();
 		}
-		 // 2) 없으면 생성 시도 (unique 경합 대비)
+		/* 아래 내용 좀 더 공부 필요 */
+		/// 없으면 생성 (unique 경합 대비)
+		/// 경합(race condition) 대비 로직. 같은 타이밍에 두 요청이 들어오면 DB의 UNIQUE 제약(가정)에 걸려 DataIntegrityViolationException이 날 수 있음.
+		/// 그때는 “혹시 다른 트랜잭션이 먼저 만들어놨을 수 있으니” 다시 조회해서 있으면 그 roomIdx를 반환.
+		/// 그래도 없으면 원래 예외 dup을 다시 던짐(진짜 무결성 문제) 라고 함
 	    try {
 	        ChattingEntity newChat = new ChattingEntity();
 	        newChat.setUserId1(chattingEntity.getUserId1());
@@ -224,11 +238,14 @@ public class JpaServiceImpl implements JpaService {
 	 */
 	
 	// 기능 특성상 정렬, 중복 제거, DTO 변환이 필요한 메서드라 단순 반복문보다 Stream 체이닝 방식이 더 적합
+	/* 채팅방 목록 조회 및 정렬 */
+	/// 현재 로그인한 유저가 속한 채팅방 리스트를 가져오고, 각각의 채팅방에 대해 마지막 메시지를 함께 DTO에 담아 반환하는 메서드
 	@Override
 	public List<ChattingRoomLastMessageDto> getChattingRoomMessage(String userId) {
 
-		// - 로그인한 유저가 속한 채팅방 전체 조회 (userId1 또는 userId2가 본인인 경우)
-		// (로그인한 유저가 속한 채팅방을 userId1 또는 userId2 기준으로 모두 조회한 후 중복 제거)
+//		채팅방은 userId1, userId2 두 필드 중 하나에 해당 유저가 있을 수 있음
+//		두 조건 모두 검색한 후 Stream.concat()으로 합치고, 중복 제거 (distinct())
+//		최종적으로 List<ChattingEntity> 형태로 저장
 		List<ChattingEntity> chatRooms = Stream.concat(
 				/*
 				 * List.addAll()로 두 리스트를 붙일 수도 있지만 Stream을 쓰면 중간에 filter, map, distinct 등 유연한 중간
@@ -239,32 +256,37 @@ public class JpaServiceImpl implements JpaService {
 		).distinct() // 동일한 채팅방이 2번 나올 수 있으니 중복제거
 				.collect(Collectors.toList());
 
-		// - 각 채팅방에 대해 마지막 메시지 뽑고, DTO로 매핑
-		List<ChattingRoomLastMessageDto> result = new ArrayList<>();
-		/* chatRooms 리스트를 순회하면서 각 요소를 chatRoom으로 꺼냄 */
+		/// 각 채팅방별로 메시지 조회 및 DTO 생성 - 결과를 담을 DTO 리스트 선언
+		List<ChattingRoomLastMessageDto> result = new ArrayList<>(); // 모든 채팅방 정보를 담을 result 리스트 생성 (ChattingRoomLastMessageDto 타입)
+		/* chatRooms 리스트를 순회하면서 각 요소를 chatRoom으로 꺼냄 - chatRooms 리스트의 모든 채팅방에 대해 반복 */
+		///각 채팅방마다 반복 실행 > 현재 채팅방의 고유 번호(roomIdx) 추출
 		for (ChattingEntity chatRoom : chatRooms) { // chatRooms 리스트 안에있는 ChattingEntity 객체들을 하나씩 꺼내면서 chatRoom 변수에 담고 그
 													// chatRoom객체로 반복문을 수행하는 것
+			
+			/* 현재 순회 중인 채팅방의 고유 ID (roomIdx) 저장 */
 			int roomIdx = chatRoom.getRoomIdx(); // 현재 채팅방 index 추출
 
-			// ✅ 정렬 보장 버전 사용
+			/* 해당 채팅방의 모든 메시지를 생성 시간 기준으로 오름차순 정렬하여 불러옴 - 가장 마지막 메세지 추출 위함 */
             List<MessageEntity> messages = jpaMessageRepository.findByRoomIdxOrderByCreatedTimeAsc(roomIdx);
             
 			// 해당 채팅방(roomIdx)의 모든 메시지를 조회
 			// (해당 채팅방의 메시지 중 가장 마지막 메시지 (createdTime 기준으로 가장 마지막))
 //			List<MessageEntity> messages = jpaMessageRepository.findByRoomIdx(roomIdx);
 
-			// 메시지가 없는 경우를 대비한 기본값 초기화
+			// 메시지가 하나도 없는 경우를 대비한 기본값 초기화
 			String lastMessage = "";
 			LocalDateTime lastSentTime = null;
 
-			// 메시지가 하나 이상 있을 때 가장 마지막 메시지 추출
+			// 메시지가 있으면, 가장 마지막 메시지를 꺼내 내용과 시간 저장
 			if (!messages.isEmpty()) {
 				MessageEntity last = messages.get(messages.size() - 1); // 마지막 메시지 - 리스트 인덱스는 0부터 시작하므로
 				lastMessage = last.getData(); // 메시지 내용
 				lastSentTime = last.getCreatedTime(); // 메시지 생성 시간 (필요 시 MessageEntity에 추가)
 			}
-			// 추출한 정보로 DTO 생성 및 채우기
+			// 결과 반환용 DTO 생성 --- 추출한 정보로 DTO 생성 및 채우기
 			ChattingRoomLastMessageDto chattingRoomLastMessageDto = new ChattingRoomLastMessageDto();
+			
+			// ↓ 채팅방 관련 정보 및 마지막 메시지 정보를 DTO에 세팅
 			chattingRoomLastMessageDto.setRoomIdx(roomIdx);
 			chattingRoomLastMessageDto.setUserId1(chatRoom.getUserId1());
 			chattingRoomLastMessageDto.setUserId2(chatRoom.getUserId2());
@@ -272,7 +294,7 @@ public class JpaServiceImpl implements JpaService {
 			chattingRoomLastMessageDto.setLastSentTime(lastSentTime);
 			chattingRoomLastMessageDto.setActive(chatRoom.isActive());
 
-			// 채팅방 생성 시간 설정
+			/* ++++ 채팅방에 메시지가 없을 경우 정렬을 위한 기준값 (생성시간) 설정 */
 			chattingRoomLastMessageDto.setCreatedAt(chatRoom.getCreatedAt()); 
 			// 결과 리스트에 추가
 			result.add(chattingRoomLastMessageDto);
@@ -283,6 +305,10 @@ public class JpaServiceImpl implements JpaService {
 	            dto -> dto.getLastSentTime() != null ? dto.getLastSentTime() : dto.getCreatedAt(),
 	            Comparator.reverseOrder()
 	    ));
+		return result; // <-- 모든 채팅방에 대해 DTO 리스트 반환
+	}
+	
+	    // 자바는 result가 ChattingRoomLastMessageDto 타입의 리스트인 걸 알고 있으므로 람다식에서 dto라고 하면 자동으로 ChattingRoomLastMessageDto 타입으로 추론해서 적어줌
 		// ↓ 아래의 방식대로하면 새로생긴 채팅방이 최하단으로 밀리는 현상이 발생
 		// 다른 채팅방에서 보낸 메세지가 있어도 그 후에 채팅방이 새로 생성되면 마지막 메세지 시간과 새로운 채팅방 생성 시간을 비교해서 
 		// 최신순 정렬 
@@ -303,20 +329,24 @@ public class JpaServiceImpl implements JpaService {
 		// 만약 lastSentTime이 null이 아니면 시간순으로 비교, null인 경우는 리스트 뒤쪽으로 보냄
 		// -> reverseOrder로 최근 시간이 맨 위로 오도록 내림차순 정렬
 
-		return result; // <-- 모든 채팅방에 대해 DTO 리스트 반환
-	}
-
+	/* 채팅방 비활성화 */
 	@Override
-	@Transactional
+	@Transactional // 이 메서드는 트랜잭션 내에서 실행되며, 실패 시 롤백됨
 	public void closeChatRoom(int roomIdx) {
 		jpaChattingRepository.findById(roomIdx).ifPresent(chat -> { //람다식 - 변수선언 하지 않고 바로 정의된 매개변수 사용 가능
-	        chat.setActive(false);
-	        jpaChattingRepository.save(chat);
+	        // 채팅방 인덱스로 Optional<ChattingEntity>를 조회 >  존재할 경우 chat으로 받아서 처리
+			chat.setActive(false); // 채팅방을 비활성화 상태로 변경 (active 컬럼 false 설정)
+	        jpaChattingRepository.save(chat); // 변경된 상태 저장
 	    });
 	}
+	
+	/* 특정 메시지 단일 읽음 처리  =>  읽음 여부 t_message_read 테이블에 저장 */
 	@Override
 	@Transactional
 	public void markMessagesAsRead(int messageIdx, String userId) {
+			// 해당 메시지 ID와 유저ID 조합으로 읽음 여부 존재 여부 확인
+			// 존재하지 않으면 새로운 MessageRead 객체 생성 및 저장
+			// 복합 키로 메시지 ID + 유저 ID 사용
 			if (!messageReadRepository.existsById_MessageIdxAndId_UserId(messageIdx, userId)) {
 				MessageRead read = new MessageRead();
 				read.setId(new MessageReadId(messageIdx, userId));
@@ -325,10 +355,13 @@ public class JpaServiceImpl implements JpaService {
 			}
 	}
 	
+	/* 지정된 메시지 번호까지 해당 유저의 메시지를 모두 읽음 처리 */
 	@Override
 	@Transactional
 	public void markMessagesAsReadUpTo(int roomIdx, String userId, int lastReadMessageIdx) {
+		// 채팅방 내 모든 메시지를 시간순 정렬해 가져옴
 		List<MessageEntity> messages = jpaMessageRepository.findByRoomIdxOrderByCreatedTimeAsc(roomIdx);
+		// 마지막 읽은 메시지 인덱스까지 반복해서 읽음 처리
 		for(MessageEntity m : messages) {
 			if(m.getMessageIdx() <= lastReadMessageIdx) {
 				markMessagesAsRead(m.getMessageIdx(), userId);
@@ -336,11 +369,13 @@ public class JpaServiceImpl implements JpaService {
 		}
 	}
 	
+	/* 특정 채팅방에서 해당 유저 기준으로 읽지 않은 메시지 수 반환 (채팅방 별 안읽음 배지처리 위함) */
 	@Override
 	public int countUnreadMessages(int roomIdx, String userId) {
 		return messageRepository.countUnreadMessages(roomIdx, userId);
 	}
 
+	/* 모든 채팅방을 통틀어서 해당 유저 기준 읽지 않은 메시지 개수 반환 (상단 네비바에 총 읽지 않은 메세지 표시 위함) */
 	@Override
 	public int countUnreadMessagesAll(String userId) {
 		return messageRepository.countUnreadMessagesForUserAcrossRooms(userId);

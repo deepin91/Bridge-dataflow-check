@@ -7,9 +7,11 @@ import org.springframework.stereotype.Repository;
 
 import bridge.entity.MessageEntity;
 
+/* 메시지 관련 쿼리를 담당하는 JPA Repository 인터페이스 */
 @Repository
-public interface MessageRepository extends JpaRepository<MessageEntity, Integer>{
-	//  단일 채팅방에서 안 읽은 메시지 수 세는 쿼리
+public interface MessageRepository extends JpaRepository<MessageEntity, Integer>{ // 메시지 관련 DB 조작 인터페이스
+	
+//	특정 채팅방에서 안 읽은 메시지 수 조회하는 JPQL
 	@Query("""
 	        SELECT COUNT(m)
 	        FROM MessageEntity m
@@ -22,7 +24,8 @@ public interface MessageRepository extends JpaRepository<MessageEntity, Integer>
 	    """)
 	    int countUnreadMessages(@Param("roomIdx") int roomIdx, @Param("userId") String userId);
 	
-	// 전체 채팅방에서 안 읽은 메시지 수 카운트 
+
+//	전체 채팅방에서 안 읽은 메시지 수 카운트
 	@Query("""
 	    SELECT COUNT(m)
 	    FROM MessageEntity m
@@ -34,3 +37,7 @@ public interface MessageRepository extends JpaRepository<MessageEntity, Integer>
 	""")
 	int countUnreadMessagesForUserAcrossRooms(@Param("userId") String userId);
 }
+
+
+// 사용 목적: 상단 알림 표시, 채팅방 리스트 정렬 판단 근거 등
+// NOT EXISTS 쿼리로 읽지 않은 메시지만 카운팅

@@ -73,5 +73,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 			response.getWriter().print(jwtToken);
 		}
 	}
-
 }
+/* 마지막 블록은 AuthenticationFilter.java 파일로 Spring Security에서 로그인 시 JWT를 생성하는 필터 */
+
+
