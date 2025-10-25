@@ -17,4 +17,5 @@ public interface JpaChattingRepository extends CrudRepository<ChattingEntity, In
 //	@Query("Insert into t_chattingroom(user_id1,user_id2) values(#{userId1},#{userId2})")
 //	void insertchatting(@Param("chattingEntity") ChattingEntity chattingEntity);
 	
+	List<ChattingEntity> findByUserId1OrUserId2(String userId1, String userId2);
 }

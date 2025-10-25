@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -16,13 +17,9 @@ import bridge.dto.ChattingRoomLastMessageDto;
 import bridge.dto.NoticeDto;
 import bridge.entity.ChattingEntity;
 import bridge.entity.MessageEntity;
-import bridge.entity.MessageRead;
-import bridge.entity.MessageReadId;
 import bridge.mapper.NoticeMapper;
 import bridge.repository.JpaChattingRepository;
 import bridge.repository.JpaMessageRepository;
-import bridge.repository.MessageReadRepository;
-import bridge.repository.MessageRepository;
 
 @Service
 public class JpaServiceImpl implements JpaService {
@@ -31,10 +28,14 @@ public class JpaServiceImpl implements JpaService {
 	private JpaMessageRepository jpaMessageRepository; // 채팅 메시지 저장 및 조회
 	@Autowired
 	private JpaChattingRepository jpaChattingRepository; // 채팅방 생성 및 조회
+//	@Autowired
+//	private MessageReadRepository messageReadRepository; // 메시지 읽음 여부 처리
+//	@Autowired
+//	private MessageRepository messageRepository; // JPQL 기반 복잡 쿼리 수행용
+	
 	@Autowired
-	private MessageReadRepository messageReadRepository; // 메시지 읽음 여부 처리
-	@Autowired
-	private MessageRepository messageRepository; // JPQL 기반 복잡 쿼리 수행용
+	private RedisChatService redisChatService;
+	
 	@Autowired
 	private NoticeMapper noticeMapper; // 공지사항 관련 MyBatis Mapper
 
@@ -343,42 +344,101 @@ public class JpaServiceImpl implements JpaService {
 	/* 특정 메시지 단일 읽음 처리  =>  읽음 여부 t_message_read 테이블에 저장 */
 	@Override
 	@Transactional
-	public void markMessagesAsRead(int messageIdx, String userId) {
-			// 해당 메시지 ID와 유저ID 조합으로 읽음 여부 존재 여부 확인
-			// 존재하지 않으면 새로운 MessageRead 객체 생성 및 저장
-			// 복합 키로 메시지 ID + 유저 ID 사용
-			if (!messageReadRepository.existsById_MessageIdxAndId_UserId(messageIdx, userId)) {
-				MessageRead read = new MessageRead();
-				read.setId(new MessageReadId(messageIdx, userId));
-				read.setReadAt(LocalDateTime.now());
-				messageReadRepository.save(read);
+	public void markMessagesAsRead(int roomIdx, String userId) {
+		// 1️⃣ 해당 채팅방의 모든 메시지를 DB에서 조회
+	    List<MessageEntity> messages = jpaMessageRepository.findByRoomIdx(roomIdx);
+	    
+	    // 2️⃣ 각 메시지 ID를 Redis에 “읽었다”는 기록으로 추가
+	    for (MessageEntity message : messages) {
+	        redisChatService.markMessageAsRead(message.getMessageIdx(), userId);
+//			 해당 메시지 ID와 유저ID 조합으로 읽음 여부 존재 여부 확인
+//			 존재하지 않으면 새로운 MessageRead 객체 생성 및 저장
+//			 복합 키로 메시지 ID + 유저 ID 사용
+//			if (!messageReadRepository.existsById_MessageIdxAndId_UserId(messageIdx, userId)) {
+//				MessageRead read = new MessageRead();
+//				read.setId(new MessageReadId(messageIdx, userId));
+//				read.setReadAt(LocalDateTime.now());
+//				messageReadRepository.save(read);
+//		/// Redis에 이 유저가 이 메시지를 읽었다는 기록만 남김
+//				redisChatService.markMessageAsRead(messageIdx, userId);
 			}
 	}
 	
-	/* 지정된 메시지 번호까지 해당 유저의 메시지를 모두 읽음 처리 */
+	
+	/* 특정 채팅방에서 해당 유저 기준으로 읽지 않은 메시지 수 반환 (채팅방 별 안읽음 배지처리 위함) */
+	/* Redis를 통해 특정 채팅방에서 유저 기준으로 안 읽은 메세지 수를 계산. */
+	/// Redis 방식으로 변경 
+	@Override
+	public int countUnreadMessages(int roomIdx, String userId) {
+		// 1️. 채팅방 내 모든 메시지를 불러오기
+	    List<MessageEntity> messages = jpaMessageRepository.findByRoomIdx(roomIdx);
+	    // 2. 해당 채팅방의 메시지 ID 전체 추출
+		Set<Integer> messageIdsInRoom = jpaMessageRepository.findMessageIdsByRoomIdx(roomIdx);
+		// 3. 내가 보낸 메시지 ID만 따로 추출 (내가 보낸 건 읽음에서 제외)
+		Set<Integer> sentByMe = jpaMessageRepository.findMessageIdsByRoomIdxAndWriter(roomIdx, userId);
+		// 4. RedisChatService 통해 안 읽은 메시지 개수 계산
+		return redisChatService.countUnreadMessages(roomIdx, userId, messageIdsInRoom, sentByMe);
+	}
+	
+	/* 지정된 메시지 번호까지 해당 유저의 메시지를 모두 읽음 처리 
+	 * 프론트에서 현재 마지막 메시지까지 다 읽었다면 이 메서드 호출 */
 	@Override
 	@Transactional
 	public void markMessagesAsReadUpTo(int roomIdx, String userId, int lastReadMessageIdx) {
 		// 채팅방 내 모든 메시지를 시간순 정렬해 가져옴
-		List<MessageEntity> messages = jpaMessageRepository.findByRoomIdxOrderByCreatedTimeAsc(roomIdx);
-		// 마지막 읽은 메시지 인덱스까지 반복해서 읽음 처리
-		for(MessageEntity m : messages) {
-			if(m.getMessageIdx() <= lastReadMessageIdx) {
-				markMessagesAsRead(m.getMessageIdx(), userId);
+//		List<MessageEntity> messages = jpaMessageRepository.findByRoomIdxOrderByCreatedTimeAsc(roomIdx);
+		
+		// 1️⃣ 채팅방 내 모든 메시지 가져오기
+	    List<MessageEntity> messages = jpaMessageRepository.findByRoomIdx(roomIdx);
+		
+		// 2. 지정된 messageIdx까지 반복하며 읽음 처리
+		for(MessageEntity message : messages) {
+			if(message.getMessageIdx() <= lastReadMessageIdx) {
+				redisChatService.markMessageAsRead(message.getMessageIdx(), userId);
 			}
 		}
 	}
 	
-	/* 특정 채팅방에서 해당 유저 기준으로 읽지 않은 메시지 수 반환 (채팅방 별 안읽음 배지처리 위함) */
-	@Override
-	public int countUnreadMessages(int roomIdx, String userId) {
-		return messageRepository.countUnreadMessages(roomIdx, userId);
-	}
-
+	/* 로그인한 유저 기준, 모든 채팅방을 돌면서 총 안 읽은 메시지 개수 합산 */
 	/* 모든 채팅방을 통틀어서 해당 유저 기준 읽지 않은 메시지 개수 반환 (상단 네비바에 총 읽지 않은 메세지 표시 위함) */
 	@Override
 	public int countUnreadMessagesAll(String userId) {
-		return messageRepository.countUnreadMessagesForUserAcrossRooms(userId);
+		// 참여 중인 모든 채팅방 조회 (userId1 또는 userId2)
+		List<ChattingEntity> allChatRooms = jpaChattingRepository.findByUserId1OrUserId2(userId, userId); // 유저가 참여 중인 모든 채팅방 조회
+		
+		int totalUnread = 0;
+		// 각 채팅방별로 Redis에서 안 읽은 메시지 개수를 더함
+		for(ChattingEntity room : allChatRooms) {
+			int roomIdx = room.getRoomIdx();
+//			List<MessageEntity> messages = jpaMessageRepository.findByRoomIdx(roomIdx);
+			
+			// 해당 채팅방의 모든 메시지 ID 가져오기
+//			Set<Integer> messageIdsInRoom = extractMessageIds(messages);
+			// MessageEntity 중 내가 쓴 메시지의 messageIdx만 추출
+//			Set<Integer> sentByMe = extractMyMessageIds(messages, userId);
+			// Redis 기반으로 안 읽은 메시지 개수 계산
+//			int unreadCount = redisChatService.countUnreadMessages(roomIdx, userId, messageIdsInRoom, sentByMe);
+			
+			totalUnread += countUnreadMessages(roomIdx, userId);
+		}
+		return totalUnread;
+	}
+	
+	/* 전체 메세지에서 messageIdx만 추출 
+	 * 전체 메시지 목록에서 messageIdx만 추출해서 Set으로 반환.
+	 */
+	private Set<Integer> extractMessageIds(List<MessageEntity> messages) {
+	    return messages.stream()
+	        .map(MessageEntity::getMessageIdx)
+	        .collect(Collectors.toSet());
+	}
+
+	/* 내가 작성한 메시지의 ID만 추출 */
+	private Set<Integer> extractMyMessageIds(List<MessageEntity> messages, String userId) {
+	    return messages.stream()
+	        .filter(m -> userId.equals(m.getWriter()))
+	        .map(MessageEntity::getMessageIdx)
+	        .collect(Collectors.toSet());
 	}
 } 
 	// 대화상대, 마지막 메세지, 시간 까지 응답

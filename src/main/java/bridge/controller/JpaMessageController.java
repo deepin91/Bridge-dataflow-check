@@ -100,6 +100,7 @@ public class JpaMessageController {
 	}
 
 	/* WebSocket 메시지 전송 핸들러 */
+	//클라이언트가 /pub/chat/message로 전송한 메시지를 수신 >  처리 후 같은 방에 /sub/chat/room/{roomIdx}로 메시지 전송
 	@Operation(summary = "채팅 메시지 전송 (WebSocket) - STOMP /pub/chat/message") // WebSocket 메세지는 Swagger에 뜨지 않음- 설명용으로 자세히
 	@MessageMapping("/chat/message") // STOMP 메시지 전송 경로 설정
 	public void message(MessageEntity message) { // 메시지 수신 메서드~
