@@ -187,6 +187,7 @@ public class JpaServiceImpl implements JpaService {
 	        newChat.setUserId2(chattingEntity.getUserId2());
 	        newChat.setCommissionIdx(chattingEntity.getCommissionIdx());
 	        newChat.setCommissionWriterId(chattingEntity.getCommissionWriterId());
+	        newChat.setCreatedAt(LocalDateTime.now()); // ✅ 추가함
 	        return jpaChattingRepository.save(newChat).getRoomIdx();
 	    } catch (org.springframework.dao.DataIntegrityViolationException dup) {
 	        // 동시에 두 요청이 들어온 경우 등: 다시 조회해서 반환

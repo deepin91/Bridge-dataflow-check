@@ -3,6 +3,7 @@ package bridge.service;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -13,7 +14,7 @@ public class RedisChatServiceImpl implements RedisChatService {
 	private final RedisTemplate<String, String> redisTemplate;
 
 	@Autowired
-	public RedisChatServiceImpl(RedisTemplate<String, String> redisTemplate) {
+	public RedisChatServiceImpl(@Qualifier("redisTemplate")RedisTemplate<String, String> redisTemplate) {
 		this.redisTemplate = redisTemplate;
 	}
 

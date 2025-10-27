@@ -2,6 +2,7 @@ package bridge.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -11,7 +12,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import bridge.entity.ChattingEntity;
 import bridge.entity.MessageEntity;
 
-@SpringBootTest
+@SpringBootTest(classes = bridge.BridgeApplication.class)
 public class JpaServiceImplTest {
 	
 	@Autowired
@@ -39,6 +40,8 @@ public class JpaServiceImplTest {
 		chat.setUserId1("userA");
 		chat.setUserId2("userB");
 		chat.setCommissionIdx(111);
+		chat.setCommissionWriterId("userA"); // ✅ 필수 추가
+	    chat.setCreatedAt(LocalDateTime.now()); // ✅ 필수 추가
 		
 		int roomIdx = jpaService.openOrFindChat(chat);
 		
