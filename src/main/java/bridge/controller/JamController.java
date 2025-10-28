@@ -195,9 +195,10 @@ public class JamController {
 	@PostMapping("/api/insertmusic/{cIdx}")
 	public ResponseEntity<Integer> insertMusic(@PathVariable("cIdx") int cIdx,
 			@RequestPart(value = "data", required = false) ConcertMusicDto concertMusicDto,
-			@RequestPart(value = "file", required = false) MultipartFile[] files, Authentication authentication)
+			@RequestPart(value = "files", required = false) MultipartFile[] files, Authentication authentication)
 			throws Exception {
-		String UPLOAD_PATH = "C:/home/ubuntu/temp/";
+//		String UPLOAD_PATH = "C:/home/ubuntu/temp/";
+		String UPLOAD_PATH = "C:/Users/조아라/files/"; 
 		String uuid = UUID.randomUUID().toString();
 		List<String> fileNames = new ArrayList<>();
 		int registedCount = 0;
@@ -217,7 +218,7 @@ public class JamController {
 				concertMusicDto.setCmUser(userDto.getUserId());
 				concertMusicDto.setMusicUUID(uuid);
 				concertMusicDto.setMusicTitle(originFileName);
-//				concertMusicDto.setCmMusic(uuid);
+				concertMusicDto.setCmMusic(uuid);
 				concertMusicDto.setCIdx(cIdx);
 				registedCount = jamService.insertMusic(concertMusicDto);
 			}

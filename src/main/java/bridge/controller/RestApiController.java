@@ -61,6 +61,10 @@ public class RestApiController {
 		BufferedOutputStream bos = null;
 //		String UPLOAD_PATH = "C:/home/ubuntu/temp/";
 		String UPLOAD_PATH = "C:/Users/조아라/files/";
+		
+	    // 로그 찍기 (여기서)
+	    System.out.println("🎵 전달받은 musicUUID: " + musicUUID);
+	    
 		System.out.println(">>>>>>>>>>>>>>>>>>>>    " + musicUUID);
 		System.out.println("++++++++++++++++++++++" + response);
 		try {

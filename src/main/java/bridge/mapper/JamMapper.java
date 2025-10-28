@@ -13,7 +13,7 @@ public interface JamMapper {
 
 	int insertJam(ConcertDto concertDto);
 
-	int inserMusic(ConcertMusicDto concertMusicDto);
+	int insertMusic(ConcertMusicDto concertMusicDto);
 
 	ConcertDto getJam(int cIdx);
 

@@ -24,7 +24,7 @@ public class JamServiceImpl implements JamService {
 	@Override
 	public int insertMusic(ConcertMusicDto concertMusicDto) {
 		// TODO Auto-generated method stub
-		return jamMapper.inserMusic(concertMusicDto);
+		return jamMapper.insertMusic(concertMusicDto);
 	}
 
 	@Override
