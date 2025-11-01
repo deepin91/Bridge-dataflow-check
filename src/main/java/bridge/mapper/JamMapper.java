@@ -15,7 +15,7 @@ public interface JamMapper {
 
 	int insertMusic(ConcertMusicDto concertMusicDto);
 
-	ConcertDto getJam(int cIdx);
+	ConcertDto getJam(int cmIdx);
 
 	List<MusicDto> getMusicUUID(int cIdx);
 

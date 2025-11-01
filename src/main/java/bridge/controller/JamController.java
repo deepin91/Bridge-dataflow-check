@@ -193,7 +193,7 @@ public class JamController {
 
 	@Operation(summary = "잼 게시글 음악 첨부")
 	@PostMapping("/api/insertmusic/{cIdx}")
-	public ResponseEntity<Integer> insertMusic(@PathVariable("cIdx") int cIdx,
+	public ResponseEntity<Map<String, Object>> insertMusic(@PathVariable("cIdx") int cIdx,
 			@RequestPart(value = "data", required = false) ConcertMusicDto concertMusicDto,
 			@RequestPart(value = "files", required = false) MultipartFile[] files, Authentication authentication)
 			throws Exception {
@@ -224,8 +224,13 @@ public class JamController {
 			}
 
 			if (registedCount > 0) {
-
-				return ResponseEntity.status(HttpStatus.OK).body(null);
+			    // 프론트로 uuid를 응답으로 전달해야 함
+			    Map<String, Object> response = new HashMap<>();
+			    response.put("uuid", uuid);
+			    response.put("musicTitle", concertMusicDto.getMusicTitle());
+			    response.put("cmInstrument", concertMusicDto.getCmInstrument());
+			    return ResponseEntity.status(HttpStatus.OK).body(response);
+//				return ResponseEntity.status(HttpStatus.OK).body(null);
 			} else {
 				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
 			}
@@ -237,7 +242,7 @@ public class JamController {
 
 	@Operation(summary = "잼 디테일 조회")
 	@GetMapping("/api/jam/{cIdx}")
-	public ResponseEntity<Map<String, Object>> insertJam(@PathVariable("cIdx") int cIdx) throws Exception {
+	public ResponseEntity<Map<String, Object>> getJamDetail(@PathVariable("cIdx") int cIdx) throws Exception {
 		ConcertDto Data = jamService.getJam(cIdx);
 		List<MusicDto> music = jamService.getMusicUUID(cIdx);
 		List<CommentsDto> list = bridgeService.selectCommentsList(cIdx);

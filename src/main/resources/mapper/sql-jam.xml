@@ -13,8 +13,8 @@
 	</insert>
 	
 	<insert id="insertMusic" parameterType="bridge.dto.ConcertMusicDto">
-	insert into concert_music (c_idx, cm_music, cm_instrument)
-	values(#{cIdx}, #{cmMusic}, #{cmInstrument})
+	insert into concert_music (c_idx, cm_music, cm_instrument, musicUUID)
+	values(#{cIdx}, #{cmMusic}, #{cmInstrument}, #{musicUUID})
 	</insert>
 	
 	<select id="getJam" resultType="bridge.dto.ConcertDto">
