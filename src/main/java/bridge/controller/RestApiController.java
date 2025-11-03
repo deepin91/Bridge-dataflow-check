@@ -60,7 +60,8 @@ public class RestApiController {
 		BufferedInputStream bis = null;
 		BufferedOutputStream bos = null;
 //		String UPLOAD_PATH = "C:/home/ubuntu/temp/";
-		String UPLOAD_PATH = "C:/Users/조아라/files/";
+//		"C:/docker/music/"
+		String UPLOAD_PATH = "C:/docker/music/";
 		
 	    // 로그 찍기 (여기서)
 	    System.out.println("🎵 전달받은 musicUUID: " + musicUUID);
@@ -114,6 +115,7 @@ public class RestApiController {
 		}
 		return ResponseEntity.ok(result);
 	}
+	
 	/* Docker 컨테이너 실행 여부 확인
 	 * 현재 ~~~~/spleeter 컨테이너가 실행 중인지 확인
 	 */
@@ -121,7 +123,7 @@ public class RestApiController {
 	@GetMapping("/api/IsDockerRun")
 	public ResponseEntity<Boolean> isDockerRun() {
 		final String command = "docker container ls"; // docker container ls 명령어로 실행 중인 컨테이너 목록을 불러옴
-		boolean isRunning = false;
+		boolean isRunning = falspe;
 		try {
 			Process process = Runtime.getRuntime().exec(command);
 			BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
@@ -150,7 +152,8 @@ public class RestApiController {
 	@Operation(summary = "분리된 음원 폴더 조회")
 	@GetMapping("/api/splitedMusic/{musicUUID}")
 	public List<String> splitedMusic(@PathVariable("musicUUID") String musicUUID) throws Exception {
-		String path = "C:/home/ubuntu/temp/output/" + musicUUID + "/";
+//		String path = "C:/home/ubuntu/temp/output/" + musicUUID + "/";
+		String path = "C:/docker/spleeter/output/" + musicUUID + "/";
 		File file = new File(path); // 예시 결과 -["vocals.wav", "drums.wav", "piano.wav", "bass.wav", "other.wav"]
 
 		File[] files = file.listFiles();
@@ -174,7 +177,9 @@ public class RestApiController {
 		FileInputStream fis = null;
 		BufferedInputStream bis = null;
 		BufferedOutputStream bos = null;
-		String path = "C:/home/ubuntu/temp/output/" + musicUUID + "/" + fn;
+//		String path = "C:/home/ubuntu/temp/output/" + musicUUID + "/" + fn;
+		String path = "C:/docker/spleeter/output/" + musicUUID + "/" + fn;
+		
 		System.out.println(">>>>>>>>>>>>>>>>>>>>    " + musicUUID);
 		System.out.println("111111111111111" + fn);
 		System.out.println("++++++++++++++++++++++" + response);
@@ -193,12 +198,14 @@ public class RestApiController {
 		}
 	}
 	
+	
 	/* 특정 stem 다운로드 */
 	@Operation(summary = "분리된 음원 다운로드")
 	@GetMapping("/api/downloadSplitedMusic/{musicUUID}/{fileName:.+}") // 특정 stem 다운로드
 	public void downloadSplitedMusic(@PathVariable("musicUUID") String musicUUID,
 			@PathVariable("fileName") String fileName, HttpServletResponse response) throws Exception {
-		String filePath = "C:/home/ubuntu/temp/output/" + musicUUID + "/" + fileName;
+//		String filePath = "C:/home/ubuntu/temp/output/" + musicUUID + "/" + fileName;
+		String filePath = "C:/docker/spleeter/output/" + musicUUID + "/" + fileName;
 		File file = new File(filePath);
 		if (file.exists()) {
 			response.setContentType("application/octet-stream");
@@ -225,7 +232,8 @@ public class RestApiController {
 	@PostMapping("/api/insertMusicForSplit/{cIdx}")
 	public ResponseEntity<Map<String, Object>> insertMusicForSplit(@PathVariable("cIdx") int cIdx,
 			@RequestPart(value = "files", required = false) MultipartFile[] files) throws Exception { // 입력 - MultipartFile[] files / cIdx - 연관된 게시글 ID
-		String UPLOAD_PATH = "C:\\home\\ubuntu\\temp\\";
+//		String UPLOAD_PATH = "C:\\home\\ubuntu\\temp\\";
+		String UPLOAD_PATH = "C:\\docker\\music\\";
 		int insertedCount = 0;
 		String uuid = UUID.randomUUID().toString();
 		List<String> fileNames = new ArrayList<>();
