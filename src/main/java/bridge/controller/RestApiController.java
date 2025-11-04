@@ -99,7 +99,9 @@ public class RestApiController {
 
 		String musicUuid = musicUUID + ".mp3";
 
-		final String command = "docker container run -d --rm -w /my-app -v  c:\\test:/my-app sihyun2/spleeter  /bin/bash -c \"spleeter separate -p spleeter:5stems -o output \""  // 실행하는 명령어
+//		final String command = "docker container run -d --rm -w /my-app -v  c:\\test:/my-app sihyun2/spleeter  /bin/bash -c \"spleeter separate -p spleeter:5stems -o output \""  // 실행하는 명령어
+//				+ musicUuid;
+		final String command = "docker container run -d --rm -w /my-app -v  C:/docker/music:my-app deezer/spleeter:3.8-5stems /bin/bash -c \"spleeter separate -p spleeter:5stems -o output \""  // 실행하는 명령어
 				+ musicUuid;
 		// -- spleeter:5stems는 보컬, 드럼, 피아노, 기타, 기타로 음원을 분리
 		// 실행되면 output/{UUID}/ 디렉토리에 분리된 mp3 파일들이 생김
@@ -123,7 +125,7 @@ public class RestApiController {
 	@GetMapping("/api/IsDockerRun")
 	public ResponseEntity<Boolean> isDockerRun() {
 		final String command = "docker container ls"; // docker container ls 명령어로 실행 중인 컨테이너 목록을 불러옴
-		boolean isRunning = falspe;
+		boolean isRunning = false;
 		try {
 			Process process = Runtime.getRuntime().exec(command);
 			BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
