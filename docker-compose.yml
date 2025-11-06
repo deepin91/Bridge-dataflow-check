@@ -1,0 +1,32 @@
+version: "3.8"
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: bridge-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: musicdb
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+  bridge-app:
+    build: .
+    container_name: bridge-app
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mysql
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/musicdb
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+    volumes:
+      - ./files:/app/files
+
+volumes:
+  mysql-data:

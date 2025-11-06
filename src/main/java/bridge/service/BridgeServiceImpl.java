@@ -28,6 +28,9 @@ public class BridgeServiceImpl implements BridgeService {
 	BridgeMapper bridgeMapper;
 	@Autowired
 	LoginMapper loginMapper;
+	@Autowired
+	PaymentService paymentService;
+	
 	@Override
 	public void insertMusic(MusicDto musicDto) {
 		bridgeMapper.insertMusic(musicDto);
