@@ -7,8 +7,26 @@ plugins {
 
 group = 'com.bridge'
 version = '0.0.1-SNAPSHOT'
-sourceCompatibility = '21'
-targetCompatibility = '21'
+// sourceCompatibility = '21'
+// targetCompatibility = '21'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs = ['src/main/java']
+        }
+        resources {
+            srcDirs = ['src/main/resources']
+        }
+    }
+}
+
 
 configurations {
 	compileOnly {
@@ -75,6 +93,7 @@ dependencies {
 	// Optional: Mockito (Mock 객체 사용 시)
 //	testImplementation 'org.mockito:mockito-core:5.5.0'
 }
+
 
 tasks.named('test') {
 	useJUnitPlatform()
