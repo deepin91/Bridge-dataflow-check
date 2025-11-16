@@ -45,6 +45,8 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/musicdb
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: root
+    volumes:
+      - ./files:/app/files
     networks:
       - backend
 

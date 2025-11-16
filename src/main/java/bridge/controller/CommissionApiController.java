@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -29,7 +30,6 @@ import bridge.service.CommissionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.servlet.ServletOutputStream;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 
@@ -41,7 +41,14 @@ public class CommissionApiController {
 
 	@Autowired
 	CommissionService commissionService;
+	
+	/* Docker환경 기준 이미지 저장경로 (application.properties로부터 주입) */
+	@Value("${upload.dir.images}")
+	private String uploadDir;
 
+	@Value("${upload.dir.base}")
+	private String basePath;
+	
 	@Operation(summary="커미션 목록 조회")
 	@GetMapping("/api/getCommissionList/{userId}")
 	public ResponseEntity<List<CommissionDto>> getCommissionList(
@@ -78,10 +85,10 @@ public class CommissionApiController {
 			@RequestPart(value = "data", required = false) CommissionDetailDto commissionDetail,
 			@RequestPart(value = "files", required = false) MultipartFile[] files) throws Exception {
 //		String UPLOAD_PATH = "C:/home/ubuntu/temp/";
-		String UPLOAD_PATH = "C:/Users/조아라/files/"; // --9/30 로컬경로로 수정
+//		String UPLOAD_PATH = "C:/Users/조아라/files/"; // --9/30 로컬경로로 수정
+		
 		int insertedCount = 0;
 		List<String> fileNames = new ArrayList<>();
-
 		Map<String, Object> result = new HashMap<>();
 
 		try {
@@ -90,7 +97,7 @@ public class CommissionApiController {
 				for (MultipartFile mf : files) {
 					String originFileName = mf.getOriginalFilename();
 					try {
-						File f = new File(UPLOAD_PATH + File.separator + uuid + ".mp3");
+						File f = new File(basePath + File.separator + uuid + ".mp3");
 						mf.transferTo(f);
 
 					} catch (IllegalStateException e) {
@@ -129,7 +136,7 @@ public class CommissionApiController {
 			@RequestPart(value = "files", required = false) MultipartFile[] files) throws Exception {
 
 //		String UPLOAD_PATH = "C:/home/ubuntu/temp/";
-		String UPLOAD_PATH = "C:/Users/조아라/files/"; // 로컬경로로 수정
+//		String UPLOAD_PATH = "C:/Users/조아라/files/"; // 로컬경로로 수정
 		String uuid = UUID.randomUUID().toString();
 		List<String> fileNames = new ArrayList<>();
 
@@ -138,7 +145,7 @@ public class CommissionApiController {
 				for (MultipartFile mf : files) {
 					String originFileName = mf.getOriginalFilename();
 					try {
-						File f = new File(UPLOAD_PATH + File.separator + uuid + ".mp3");
+						File f = new File(basePath + File.separator + uuid + ".mp3");
 						mf.transferTo(f);
 					} catch (IllegalStateException e) {
 						e.printStackTrace();
@@ -242,7 +249,7 @@ public class CommissionApiController {
 			@Parameter(description = "커미션 첨부파일 다운로드 관련 UUID", required = true)
 			@PathVariable("uuid") String uuid, HttpServletResponse response) throws Exception {
 //		String filePath = "C:/home/ubuntu/temp/" + uuid + ".mp3";
-		String filePath = "C:/Users/조아라/files/" + uuid + ".mp3";
+		String filePath = basePath + File.separator + uuid + ".mp3";
 		File file = new File(filePath);
 		if (file.exists()) {
 			response.setContentType("application/octet-stream");

@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -48,6 +49,16 @@ public class RestApiController {
 	@Autowired
 	private BridgeMapper bridgeMapper;
 
+	@Value("${upload.dir.spleeter.input}")
+	private String spleeterInputPath;
+
+	@Value("${upload.dir.spleeter.output}")
+	private String spleeterOutputPath;
+
+	@Value("${upload.dir.base}")
+	private String basePath;  // 조회 시 사용하는 기본 경로 (다운로드 경로 base로 쓸 수 있음)
+
+	
 	@Operation(summary = "음악 파일 조회")
 	@GetMapping("/api/getMusic/{musicUUID}") 
 	// MP3 재생 (원본)
@@ -61,7 +72,7 @@ public class RestApiController {
 		BufferedOutputStream bos = null;
 //		String UPLOAD_PATH = "C:/home/ubuntu/temp/";
 //		"C:/docker/music/"
-		String UPLOAD_PATH = "C:/docker/music/";
+//		String UPLOAD_PATH = "C:/docker/music/";
 		
 	    // 로그 찍기 (여기서)
 	    System.out.println("🎵 전달받은 musicUUID: " + musicUUID);
@@ -71,7 +82,7 @@ public class RestApiController {
 		try {
 			response.setHeader("Content-Disposition", "inline;");
 			byte[] buf = new byte[1024];
-			fis = new FileInputStream(UPLOAD_PATH + musicUUID + ".mp3");
+			fis = new FileInputStream(basePath + musicUUID + ".mp3");
 			bis = new BufferedInputStream(fis);
 			bos = new BufferedOutputStream(response.getOutputStream());
 			int read;
@@ -101,20 +112,19 @@ public class RestApiController {
 
 //		final String command = "docker container run -d --rm -w /my-app -v  c:\\test:/my-app sihyun2/spleeter  /bin/bash -c \"spleeter separate -p spleeter:5stems -o output \""  // 실행하는 명령어
 //				+ musicUuid;
-		final String command = "docker container run -d --rm -w /my-app -v  C:/docker/music:my-app deezer/spleeter:3.8-5stems /bin/bash -c \"spleeter separate -p spleeter:5stems -o output \""  // 실행하는 명령어
-				+ musicUuid;
+		final String command = "docker container run -d --rm "
+				+ "-v " + spleeterInputPath + ":/input "
+				+ "-v " + spleeterOutputPath + ":/output "
+				+ "deezer/spleeter:3.8-5stems "
+				+ "separate -p spleeter:5stems -o /output /input/" + musicUuid;
 		// -- spleeter:5stems는 보컬, 드럼, 피아노, 기타, 기타로 음원을 분리
 		// 실행되면 output/{UUID}/ 디렉토리에 분리된 mp3 파일들이 생김
-		Process process = null;
+		Process process = Runtime.getRuntime().exec(command);
+		process.waitFor();
+
 		Map<String, Object> result = new HashMap<>();
-		List<String> uuids = new ArrayList<>();
-		result.put("uuids", uuids);
-		try {
-			process = Runtime.getRuntime().exec(command);
-			process.waitFor();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		result.put("uuid", musicUUID);
+
 		return ResponseEntity.ok(result);
 	}
 	
@@ -129,21 +139,19 @@ public class RestApiController {
 		try {
 			Process process = Runtime.getRuntime().exec(command);
 			BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-			List<String> list = reader.lines().toList();
 
-			Iterator<String> iterator = list.iterator();
-			while (iterator.hasNext()) {
-				String line = iterator.next();
-				if (line.contains("sihyun2/spleeter")) {
-					isRunning = true;  // 그 중 spleeter 이미지가 있으면 true 반환
+			for (String line : reader.lines().toList()) {
+				if (line.contains("spleeter")) {
+					isRunning = true;
 					break;
 				}
 			}
 			process.waitFor();
+
 		} catch (IOException | InterruptedException e) {
 			e.printStackTrace();
 		}
-		System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" + isRunning);
+
 		return ResponseEntity.ok(isRunning);
 	}
 
@@ -155,19 +163,19 @@ public class RestApiController {
 	@GetMapping("/api/splitedMusic/{musicUUID}")
 	public List<String> splitedMusic(@PathVariable("musicUUID") String musicUUID) throws Exception {
 //		String path = "C:/home/ubuntu/temp/output/" + musicUUID + "/";
-		String path = "C:/docker/spleeter/output/" + musicUUID + "/";
+		String path = spleeterOutputPath + musicUUID + "/"; // // ex => /app/files/output/UUID/
 		File file = new File(path); // 예시 결과 -["vocals.wav", "drums.wav", "piano.wav", "bass.wav", "other.wav"]
 
-		File[] files = file.listFiles();
 		List<String> fileNames = new ArrayList<>();
-
-		for (File f : files) {
-			String fileName = f.getName();
-			fileNames.add(fileName);
-			System.out.println("=================" + fileNames);
+		File[] files = file.listFiles();
+		
+		if (files != null) {
+			for (File f : files) {
+				fileNames.add(f.getName());
+			}
 		}
 		return fileNames;
-	};
+	}
 	
 	/* 특정 stem 스트리밍 재생
 	 * output/{UUID}/{파일명} 파일을 브라우저에서 스트리밍 재생하게끔 응답
@@ -176,27 +184,27 @@ public class RestApiController {
 	@GetMapping("/api/getSplitedMusic/{musicUUID}/{fn}") // 특정 stem 재생
 	public void getSplitedMusic(@PathVariable("musicUUID") String musicUUID, HttpServletResponse response,
 			@PathVariable("fn") String fn) throws Exception { // fn은 vocals.wav 등 stem 파일명
-		FileInputStream fis = null;
-		BufferedInputStream bis = null;
-		BufferedOutputStream bos = null;
+//		FileInputStream fis = null;
+//		BufferedInputStream bis = null;
+//		BufferedOutputStream bos = null;
 //		String path = "C:/home/ubuntu/temp/output/" + musicUUID + "/" + fn;
-		String path = "C:/docker/spleeter/output/" + musicUUID + "/" + fn;
+//		String path = "C:/docker/spleeter/output/" + musicUUID + "/" + fn;
+		String path = spleeterOutputPath + musicUUID + "/" + fn;
 		
 		System.out.println(">>>>>>>>>>>>>>>>>>>>    " + musicUUID);
 		System.out.println("111111111111111" + fn);
 		System.out.println("++++++++++++++++++++++" + response);
-		try {
+		try (
+			FileInputStream fis = new FileInputStream(path);
+			BufferedInputStream bis = new BufferedInputStream(fis);
+			BufferedOutputStream bos = new BufferedOutputStream(response.getOutputStream()) 
+			) {	
 			response.setHeader("Content-Disposition", "inline;");
 			byte[] buf = new byte[1024];
-			fis = new FileInputStream(path);
-			bis = new BufferedInputStream(fis);
-			bos = new BufferedOutputStream(response.getOutputStream());
 			int read;
 			while ((read = bis.read(buf, 0, 1024)) != -1) {
 				bos.write(buf, 0, read);
 			}
-		} finally {
-
 		}
 	}
 	
@@ -207,7 +215,9 @@ public class RestApiController {
 	public void downloadSplitedMusic(@PathVariable("musicUUID") String musicUUID,
 			@PathVariable("fileName") String fileName, HttpServletResponse response) throws Exception {
 //		String filePath = "C:/home/ubuntu/temp/output/" + musicUUID + "/" + fileName;
+//		String filePath = "C:/docker/spleeter/output/" + musicUUID + "/" + fileName;
 		String filePath = "C:/docker/spleeter/output/" + musicUUID + "/" + fileName;
+		
 		File file = new File(filePath);
 		if (file.exists()) {
 			response.setContentType("application/octet-stream");
@@ -235,47 +245,33 @@ public class RestApiController {
 	public ResponseEntity<Map<String, Object>> insertMusicForSplit(@PathVariable("cIdx") int cIdx,
 			@RequestPart(value = "files", required = false) MultipartFile[] files) throws Exception { // 입력 - MultipartFile[] files / cIdx - 연관된 게시글 ID
 //		String UPLOAD_PATH = "C:\\home\\ubuntu\\temp\\";
-		String UPLOAD_PATH = "C:\\docker\\music\\";
-		int insertedCount = 0;
 		String uuid = UUID.randomUUID().toString();
+		String UPLOAD_PATH = spleeterInputPath + uuid + ".mp3"; // /app/files/music/UUID.mp3
+		
 		List<String> fileNames = new ArrayList<>();
-
 		Map<String, Object> result = new HashMap<>();
 
-		try {
 			for (MultipartFile mf : files) {
 				String originFileName = mf.getOriginalFilename();
-				try {
-					File f = new File(UPLOAD_PATH + File.separator + uuid + ".mp3"); // 파일명을 UUID.mp3로 저장
-					System.out.println("---------------------------" + f);
-					mf.transferTo(f); // UUID로 저장
-
-				} catch (IllegalStateException e) {
-					e.printStackTrace();
-				}
 				fileNames.add(originFileName);
-				insertedCount++;
+				
+				File f = new File(UPLOAD_PATH); // 파일명을 UUID.mp3로 저장
+				System.out.println("---------------------------" + f);
+				mf.transferTo(f); // UUID로 저장
 
+			
 				MusicDto musicDto = new MusicDto();
 				musicDto.setMusicTitle(originFileName);
-				musicDto.setMusicUUID(uuid); // // DB에도 저장
+				musicDto.setMusicUUID(uuid);
 				musicDto.setCIdx(cIdx);
-				bridgeService.insertMusic(musicDto); // musicDto에 제목/UUID/cIdx 저장 후 bridgeService.insertMusic() 호출
+
+				bridgeService.insertMusic(musicDto);
 			}
 
-			if (insertedCount > 0) {
-				result.put("uuid", uuid);
-				result.put("fileNames", fileNames);
-				return ResponseEntity.status(HttpStatus.OK).body(result);
-			} else {
-				result.put("message", "No files uploaded");
-				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-			result.put("message", "파일 업로드 중 오류가 발생했습니다.");
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(result);
-		}
+			result.put("uuid", uuid);
+			result.put("fileNames", fileNames);
+
+			return ResponseEntity.ok(result);
 	}
 
 	/* 신고하기 */

@@ -35,14 +35,20 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class PartnerApiController {
 	
-	@Value("${file.upload-dir}")
-	private String uploadDir;
+//	@Value("${file.upload-dir}")
+//	private String uploadDir;
 	
 	@Autowired
 	BridgeService bridgeService;
 
 	@Autowired
 	BridgeMapper bridgeMapper;
+	
+	@Value("${upload.dir.images}")
+	private String uploadDir;
+
+	@Value("${upload.dir.base}")
+	private String basePath;
 
 	
 	@Operation(summary="커미션 게시글 작성")
@@ -56,7 +62,7 @@ public class PartnerApiController {
 		dto.setCrtTags(composerRequestDto.getCrtTag());
 
 //		String UPLOAD_PATH = "C:/home/ubuntu/temp/"; -- 로컬경로로 수정(임시)
-		String UPLOAD_PATH = "C:/Users/조아라/files/"; 
+//		String UPLOAD_PATH = "C:/Users/조아라/files/"; 
 		int insertedCount = 0;
 
 		String fileNames = "";
@@ -68,7 +74,7 @@ public class PartnerApiController {
 				composerRequestDto.setCrPhoto(originFileName); // 원본 파일명으로 crPhoto set
 				fileNames = fileNames + "," + saveFile;
 				try {
-					File f1 = new File(UPLOAD_PATH + originFileName);
+					File f1 = new File(uploadDir + originFileName);
 					mf.transferTo(f1);
 				} catch (IllegalStateException e) {
 					e.printStackTrace();
@@ -182,14 +188,14 @@ public class PartnerApiController {
 	@Operation(summary = "커미션 목록 이미지 조회")
 	@GetMapping("/api/getImage/{imgName}")
 	public void getImage(@PathVariable("imgName") String imgName, HttpServletResponse response) throws Exception {
-	    String UPLOAD_PATH = "C:/Users/조아라/files/"; 
+//	    String UPLOAD_PATH = "C:/Users/조아라/files/"; 
 	    // String UPLOAD_PATH = "/home/ubuntu/temp/"; // 서버일 경우
 
-	    File file = new File(UPLOAD_PATH, imgName);
+	    File file = new File(uploadDir, imgName);
 
 	    // ✅ 파일 없으면 기본 이미지로 대체
 	    if (!file.exists()) {
-	        file = new File(UPLOAD_PATH, "default.png"); 
+	        file = new File(uploadDir, "default.png"); 
 	        if (!file.exists()) {
 	            response.sendError(HttpServletResponse.SC_NOT_FOUND);
 	            return;

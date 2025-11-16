@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -36,6 +37,12 @@ public class UserProfileController {
 	
 	@Autowired
 	BridgeMapper bridgeMapper;
+	
+	@Value("${upload.dir.images}")
+	private String uploadDir;
+
+	@Value("${upload.dir.base}")
+	private String basePath;
 
 	@Operation(summary="프로필 작성")
 	@PostMapping("/api/insertProfile/{userId}")
@@ -46,14 +53,14 @@ public class UserProfileController {
 			@RequestPart(value = "tag", required = false) TagDto tag) throws Exception {
 		System.out.println(tag);
 //		String UPLOAD_PATH = "C:/home/ubuntu/temp/";
-		String UPLOAD_PATH = "C:/Users/조아라/files/";
+//		String UPLOAD_PATH = "C:/Users/조아라/files/";
 		int insertedCount = 0;
 		try {
 			for (MultipartFile mf : files) {
 				String uuid = UUID.randomUUID().toString();
 				userProfileDto.setProfileImg(uuid);
 				try {
-					File f1 = new File(UPLOAD_PATH + uuid + ".jpg");
+					File f1 = new File(uploadDir + uuid + ".jpg");
 					mf.transferTo(f1);
 				} catch (IllegalStateException e) {
 					e.printStackTrace();
@@ -63,7 +70,7 @@ public class UserProfileController {
 				String uuid = UUID.randomUUID().toString();
 					userProfileDto.setUserMusic(uuid);
 				try {
-					File f1 = new File(UPLOAD_PATH + uuid + ".mp3");
+					File f1 = new File(basePath + uuid + ".mp3");
 					mf.transferTo(f1);
 				} catch (IllegalStateException e) {
 					e.printStackTrace();

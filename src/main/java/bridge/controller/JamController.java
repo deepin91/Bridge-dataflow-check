@@ -39,8 +39,8 @@ public class JamController {
 	@Autowired
 	BridgeService bridgeService;
 
-	@Value("${file.upload-dir}")
-	private String uploadDir;
+	@Value("${upload.dir.jam}")
+	private String jamUploadPath;
 
 	@Operation(summary = "잼 목록 조회")
 	@GetMapping("/api/jam")
@@ -61,7 +61,7 @@ public class JamController {
 	// !!!!!!!!!!!근데 오류남 이 부분 다시 설정 및 체크 필요 그리고 insertTip()였던 부분도
 
 	/* 잼(Jam) 게시글 작성 시, 파일 업로드 및 로그인 사용자 정보 기반으로 게시글을 등록하는 API */
-	// 필드에 @Value 사용해서 application.properties
+	// 필드에 @Value 사용해서 application.properties --> docker 사용 시 컨테이너 경로 set
 
 	@Operation(summary = "잼 게시글 작성") // Swagger 문서에 "잼 게시글 작성"으로 표시
 	@PostMapping("/api/insertjam") // 경로로 들어오는 요청을 처리
@@ -76,7 +76,7 @@ public class JamController {
 																// Security로부터 받아옴.
 		// 파일 업로드 경로 및 UUID 설정
 //		String UPLOAD_PATH = "C:/home/ubuntu/temp/";
-		String UPLOAD_PATH = "C:/Users/조아라/files/";
+//		String UPLOAD_PATH = "C:/Users/조아라/files/";
 		String uuid = UUID.randomUUID().toString(); // uuid -- 저장할 파일명 중복 방지를 위한 랜덤한 고유 문자열 생성
 //		List<String> fileNames = new ArrayList<>(); // 파일명 목록 저장용 리스트
 //		Map<String, Object> result = new HashMap<>(); // 결과 저장용 Map
@@ -105,7 +105,7 @@ public class JamController {
 
 			// 저장 파일명: uuid + 확장자
 			String savedFileName = uuid + extension;
-			File targetFile = new File(UPLOAD_PATH + File.separator + savedFileName);
+			File targetFile = new File(jamUploadPath + File.separator + savedFileName);
 
 			// 실제 파일을 서버에 저장
 			try {
@@ -198,7 +198,7 @@ public class JamController {
 			@RequestPart(value = "files", required = false) MultipartFile[] files, Authentication authentication)
 			throws Exception {
 //		String UPLOAD_PATH = "C:/home/ubuntu/temp/";
-		String UPLOAD_PATH = "C:/Users/조아라/files/"; 
+//		String UPLOAD_PATH = "C:/Users/조아라/files/"; 
 		String uuid = UUID.randomUUID().toString();
 		List<String> fileNames = new ArrayList<>();
 		int registedCount = 0;
@@ -206,7 +206,7 @@ public class JamController {
 			for (MultipartFile mf : files) {
 				String originFileName = mf.getOriginalFilename();
 				try {
-					File f = new File(UPLOAD_PATH + File.separator + uuid + ".mp3");
+					File f = new File(jamUploadPath + File.separator + uuid + ".mp3");
 					mf.transferTo(f);
 
 				} catch (IllegalStateException e) {
