@@ -41,6 +41,9 @@ public class JamController {
 
 	@Value("${upload.dir.jam}")
 	private String jamUploadPath;
+	
+	@Value("${upload.dir.base}")
+	private String basePath;
 
 	@Operation(summary = "잼 목록 조회")
 	@GetMapping("/api/jam")
@@ -105,7 +108,7 @@ public class JamController {
 
 			// 저장 파일명: uuid + 확장자
 			String savedFileName = uuid + extension;
-			File targetFile = new File(jamUploadPath + File.separator + savedFileName);
+			File targetFile = new File(basePath + File.separator + savedFileName);
 
 			// 실제 파일을 서버에 저장
 			try {
@@ -206,7 +209,7 @@ public class JamController {
 			for (MultipartFile mf : files) {
 				String originFileName = mf.getOriginalFilename();
 				try {
-					File f = new File(jamUploadPath + File.separator + uuid + ".mp3");
+					File f = new File(basePath + File.separator + uuid + ".mp3");
 					mf.transferTo(f);
 
 				} catch (IllegalStateException e) {

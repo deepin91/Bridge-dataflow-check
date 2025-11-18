@@ -10,7 +10,7 @@ public class ComposerRequestDto {
 	
 	 	private String userId;
 //	 	private String userNickname;
-	 	private int crtidx;
+	 	private int crtIdx;
 	 	private List<String> crtTag;
 	 	//
 	 	private int crIdx;
