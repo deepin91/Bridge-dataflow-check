@@ -1,4 +1,3 @@
-
 services:
   mysql:
     image: mysql:5.7
@@ -34,6 +33,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: springboot-container
+    restart: always
     ports:
       - "8080:8080"
     depends_on:
@@ -47,11 +47,26 @@ services:
       SPRING_DATASOURCE_PASSWORD: root
     volumes:
       - ./files:/app/files
+      # ✅ ADD: springboot 컨테이너에서 docker exec 사용하려면 필요
+      - /var/run/docker.sock:/var/run/docker.sock
     networks:
       - backend
+
+  # ✅ ADD: Spleeter 컨테이너 (음원 분리 실행용)
+  spleeter:
+    image: deezer/spleeter:3.8
+    container_name: spleeter-container
+    restart: always
+    volumes:
+      - ./files:/app/files
+    networks:
+      - backend
+    # ✅ CHANGED: ENTRYPOINT가 spleeter라서, 쉘로 덮어써서 컨테이너 유지
+    entrypoint: ["sh", "-c"]
+    command: ["sleep infinity"]
 
 volumes:
   mysql_data:
 
 networks:
-  backend:   # ✅ 이 부분 반드시 있어야 함!!
+  backend:

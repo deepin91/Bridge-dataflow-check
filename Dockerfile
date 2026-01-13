@@ -18,6 +18,11 @@ RUN ./gradlew clean build -x test --no-daemon
 FROM eclipse-temurin:21-jdk-jammy
 WORKDIR /app
 
+# ✅ ADD: docker CLI 설치 (ProcessBuilder("docker", ...) 실행 목적)
+RUN apt-get update \
+ && apt-get install -y docker.io \
+ && rm -rf /var/lib/apt/lists/*
+
 # 1단계에서 빌드된 JAR 복사
 COPY --from=builder /app/build/libs/*.jar app.jar
 

@@ -58,6 +58,8 @@ public class RestApiController {
 	@Value("${upload.dir.base}")
 	private String basePath;  // 조회 시 사용하는 기본 경로 (다운로드 경로 base로 쓸 수 있음)
 
+	@Value("${upload.dir.music}")
+	private String musicDir;
 	
 	@Operation(summary = "음악 파일 조회")
 	@GetMapping("/api/getMusic/{musicUUID}") 
@@ -82,7 +84,7 @@ public class RestApiController {
 		try {
 			response.setHeader("Content-Disposition", "inline;");
 			byte[] buf = new byte[1024];
-			fis = new FileInputStream(basePath + musicUUID + ".mp3");
+			fis = new FileInputStream(musicDir + musicUUID + ".mp3");
 			bis = new BufferedInputStream(fis);
 			bos = new BufferedOutputStream(response.getOutputStream());
 			int read;
@@ -108,25 +110,57 @@ public class RestApiController {
 	public ResponseEntity<Map<String, Object>> dockerList(@PathVariable("musicUUID") String musicUUID)
 			throws Exception {
 
-		String musicUuid = musicUUID + ".mp3";
+//		String musicUuid = musicUUID + ".mp3";
+//
+////		final String command = "docker container run -d --rm -w /my-app -v  c:\\test:/my-app sihyun2/spleeter  /bin/bash -c \"spleeter separate -p spleeter:5stems -o output \""  // 실행하는 명령어
+////				+ musicUuid;
+//		final String command = "docker container run -d --rm "
+//				+ "-v " + spleeterInputPath + ":/input "
+//				+ "-v " + spleeterOutputPath + ":/output "
+//				+ "deezer/spleeter:3.8-5stems "
+//				+ "separate -p spleeter:5stems -o /output /input/" + musicUuid;
+//		// -- spleeter:5stems는 보컬, 드럼, 피아노, 기타, 기타로 음원을 분리
+//		// 실행되면 output/{UUID}/ 디렉토리에 분리된 mp3 파일들이 생김
+//		// 기존의 ProcessBuilder 방식으 매번 컨테이너를 새로 띄우고 여러 문제가 발생하기 쉬움 > exec 방식으로 변경
+//		// 이미 떠 있는 컨테이너에서 명령만 실행하므로 단순하면서 안정적
+//		Process process = Runtime.getRuntime().exec(command);
+//		process.waitFor();
+//
+//		Map<String, Object> result = new HashMap<>();
+//		result.put("uuid", musicUUID);
+//
+//		return ResponseEntity.ok(result);
+//	}
+	    String musicFile = musicUUID + ".mp3";
 
-//		final String command = "docker container run -d --rm -w /my-app -v  c:\\test:/my-app sihyun2/spleeter  /bin/bash -c \"spleeter separate -p spleeter:5stems -o output \""  // 실행하는 명령어
-//				+ musicUuid;
-		final String command = "docker container run -d --rm "
-				+ "-v " + spleeterInputPath + ":/input "
-				+ "-v " + spleeterOutputPath + ":/output "
-				+ "deezer/spleeter:3.8-5stems "
-				+ "separate -p spleeter:5stems -o /output /input/" + musicUuid;
-		// -- spleeter:5stems는 보컬, 드럼, 피아노, 기타, 기타로 음원을 분리
-		// 실행되면 output/{UUID}/ 디렉토리에 분리된 mp3 파일들이 생김
-		Process process = Runtime.getRuntime().exec(command);
-		process.waitFor();
+	    // ✅ CHANGED: docker run(-v) -> docker exec (볼륨/호스트경로 문제 제거)
+	    // ✅ ADD: -d 로 백그라운드 실행 (웹 요청 타임아웃 방지)
+	    List<String> cmd = List.of(
+	        "docker", "exec", "-d",
+	        "spleeter-container",
+	        "spleeter", "separate",
+	        "-p", "spleeter:5stems",
+	        "-o", "/app/files/spleeter/output",
+	        "/app/files/spleeter/input/" + musicFile
+	    );
 
-		Map<String, Object> result = new HashMap<>();
-		result.put("uuid", musicUUID);
+	    ProcessBuilder pb = new ProcessBuilder(cmd);
+	    pb.redirectErrorStream(true);
 
-		return ResponseEntity.ok(result);
+	    Process p = pb.start();
+	    int exit = p.waitFor(); //docker exec "시작" 성공 여부
+
+	    // ✅ ADD: 시작 자체가 실패하면 500으로 내려줘야 프론트가 계속 “분리중” 안 뜸
+	    if (exit != 0) {
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	            .body(Map.of("message", "docker exec 실패", "uuid", musicUUID, "exitCode", exit));
+	    }
+
+	    Map<String, Object> result = new HashMap<>();
+	    result.put("uuid", musicUUID);
+	    return ResponseEntity.ok(result);
 	}
+	
 	
 	/* Docker 컨테이너 실행 여부 확인
 	 * 현재 ~~~~/spleeter 컨테이너가 실행 중인지 확인
@@ -134,26 +168,57 @@ public class RestApiController {
 	@Operation(summary = "컨테이너 실행 여부 조회")
 	@GetMapping("/api/IsDockerRun")
 	public ResponseEntity<Boolean> isDockerRun() {
-		final String command = "docker container ls"; // docker container ls 명령어로 실행 중인 컨테이너 목록을 불러옴
+//		final String command = "docker container ls"; // docker container ls 명령어로 실행 중인 컨테이너 목록을 불러옴
+//		boolean isRunning = false;
+//		try {
+//			Process process = Runtime.getRuntime().exec(command);
+//			BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+//
+//			for (String line : reader.lines().toList()) {
+//				if (line.contains("spleeter")) {
+//					isRunning = true;
+//					break;
+//				}
+//			}
+//			process.waitFor();
+//
+//		} catch (IOException | InterruptedException e) {
+//			e.printStackTrace();
+//		}
+//
+//		return ResponseEntity.ok(isRunning);
+//	}
 		boolean isRunning = false;
-		try {
-			Process process = Runtime.getRuntime().exec(command);
-			BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+	    try {
+	    	// docker container ls (컨테이너 존재 체크) → separate 프로세스 존재 체크
+	        List<String> cmd = List.of(
+	            "docker", "exec",
+	            "spleeter-container",
+	            "sh", "-c",
+	            "ps aux | grep -E 'spleeter.*separate' | grep -v grep"
+	        );
 
-			for (String line : reader.lines().toList()) {
-				if (line.contains("spleeter")) {
-					isRunning = true;
-					break;
-				}
-			}
-			process.waitFor();
+	        ProcessBuilder pb = new ProcessBuilder(cmd);
+	        pb.redirectErrorStream(true);
+	        Process process = pb.start();
 
-		} catch (IOException | InterruptedException e) {
-			e.printStackTrace();
-		}
-
-		return ResponseEntity.ok(isRunning);
+	        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+	            String line = reader.readLine();
+	            // ✅ ADD: 한 줄이라도 나오면 separate가 돌고 있는 것
+	            if (line != null && !line.isBlank()) {
+	                isRunning = true;
+	            }
+	        }
+	        
+	        process.waitFor();
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	     // ✅ ADD: 예외면 안전하게 false (무한 분리중 방지)
+	        isRunning = false;
+	    }
+	    return ResponseEntity.ok(false);
 	}
+	
 
 	/* 분리된 음원 목록 조회
 	 * 위에서 생성된 output/UUID/ 폴더에 있는 분리된 mp3 파일 목록을 반환
@@ -242,12 +307,23 @@ public class RestApiController {
 	 */
 	@Operation(summary = "분리할 음원 업로드")
 	@PostMapping("/api/insertMusicForSplit/{cIdx}")
-	public ResponseEntity<Map<String, Object>> insertMusicForSplit(@PathVariable("cIdx") int cIdx,
+	public ResponseEntity<Map<String, Object>> insertMusicForSplit(
+			@PathVariable("cIdx") int cIdx,
 			@RequestPart(value = "files", required = false) MultipartFile[] files) throws Exception { // 입력 - MultipartFile[] files / cIdx - 연관된 게시글 ID
 //		String UPLOAD_PATH = "C:\\home\\ubuntu\\temp\\";
-		String uuid = UUID.randomUUID().toString();
-		String UPLOAD_PATH = spleeterInputPath + uuid + ".mp3"; // /app/files/music/UUID.mp3
 		
+		// ✅ ADD: files null/빈 배열 방어 (없으면 for문/NPE or 의미없는 요청)
+	    if (files == null || files.length == 0) {
+	        return ResponseEntity.badRequest().body(Map.of("message", "files는 필수입니다."));
+	    }
+	    
+		String uuid = UUID.randomUUID().toString();
+//		String UPLOAD_PATH = spleeterInputPath + uuid + ".mp3"; // /app/files/music/UUID.mp3
+		File inputDir = new File(spleeterInputPath); // input 폴더는 디렉토리로 잡고, 파일명은 아래에서 File로 결합
+		
+		// ADD: 폴더 없으면 생성 (FileNotFoundException 방지 핵심)
+	    if (!inputDir.exists()) inputDir.mkdirs();
+	    
 		List<String> fileNames = new ArrayList<>();
 		Map<String, Object> result = new HashMap<>();
 
@@ -255,10 +331,13 @@ public class RestApiController {
 				String originFileName = mf.getOriginalFilename();
 				fileNames.add(originFileName);
 				
-				File f = new File(UPLOAD_PATH); // 파일명을 UUID.mp3로 저장
+//				File f = new File(UPLOAD_PATH); // 파일명을 UUID.mp3로 저장
+				
+//				디렉토리 + 파일명 결합 (OS 경로 안전)
+		        File f = new File(inputDir, uuid + ".mp3");
 				System.out.println("---------------------------" + f);
+				
 				mf.transferTo(f); // UUID로 저장
-
 			
 				MusicDto musicDto = new MusicDto();
 				musicDto.setMusicTitle(originFileName);

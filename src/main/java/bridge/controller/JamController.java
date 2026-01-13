@@ -44,6 +44,12 @@ public class JamController {
 	
 	@Value("${upload.dir.base}")
 	private String basePath;
+	
+	@Value("${upload.dir.images}")
+	private String imageDir;
+	
+	@Value("${upload.dir.music}")
+	private String musicDir;
 
 	@Operation(summary = "잼 목록 조회")
 	@GetMapping("/api/jam")
@@ -108,7 +114,7 @@ public class JamController {
 
 			// 저장 파일명: uuid + 확장자
 			String savedFileName = uuid + extension;
-			File targetFile = new File(basePath + File.separator + savedFileName);
+			File targetFile = new File(imageDir + File.separator + savedFileName);
 
 			// 실제 파일을 서버에 저장
 			try {
@@ -196,7 +202,8 @@ public class JamController {
 
 	@Operation(summary = "잼 게시글 음악 첨부")
 	@PostMapping("/api/insertmusic/{cIdx}")
-	public ResponseEntity<Map<String, Object>> insertMusic(@PathVariable("cIdx") int cIdx,
+	public ResponseEntity<Map<String, Object>> insertMusic(
+			@PathVariable("cIdx") int cIdx,
 			@RequestPart(value = "data", required = false) ConcertMusicDto concertMusicDto,
 			@RequestPart(value = "files", required = false) MultipartFile[] files, Authentication authentication)
 			throws Exception {
@@ -205,11 +212,18 @@ public class JamController {
 		String uuid = UUID.randomUUID().toString();
 		List<String> fileNames = new ArrayList<>();
 		int registedCount = 0;
+		
+		// 추가 1 music 폴더로 경로 지정 - 없이 했을 경우 경로를 찾지 못해 오류남
+//		File musicDir = new File(basePath, "music");
+		// 추가 2 폴더 없으면 생성
+//		if(!musicDir.exists()) musicDir.mkdirs();
+		
 		try {
 			for (MultipartFile mf : files) {
 				String originFileName = mf.getOriginalFilename();
+				
 				try {
-					File f = new File(basePath + File.separator + uuid + ".mp3");
+					File f = new File(musicDir, uuid + ".mp3");
 					mf.transferTo(f);
 
 				} catch (IllegalStateException e) {
@@ -237,7 +251,7 @@ public class JamController {
 			} else {
 				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
 			}
-		} catch (Exception e) {
+		} catch (IOException | IllegalStateException e) {
 			e.printStackTrace();
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
 		}
