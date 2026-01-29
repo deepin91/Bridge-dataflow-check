@@ -1,6 +1,7 @@
 package bridge.service;
 
 import java.util.ArrayList;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.User;
@@ -86,6 +87,23 @@ public class LoginServiceImpl implements LoginService {
 //	    return null;
 //	}
 	//
+//	@Override
+	public UserDto passOrCreate(UserDto dto) throws Exception{
+		UserDto found = loginMapper.passInformation(dto);
+		if(found != null) return found;
+		
+		String newUserId = "naver_" + UUID.randomUUID().toString().replace("-", "").substring(0, 12);
+		dto.setUserId(newUserId);
+		
+//	    // ✅ ADD: phone 필수값 임시 세팅 (폰넘버 제공 ㄴㄴ라서)
+//	    if (dto.getUserPhoneNumber() == null || dto.getUserPhoneNumber().isBlank()) {
+//	        dto.setUserPhoneNumber("000-0000-0000");
+//	    }
+		
+		loginMapper.insertSocialUser(dto);
+		
+		return loginMapper.passInformation(dto);
+	}
 
 	@Override
 	public int userIdCheck(String userIdCheck) throws Exception {

@@ -14,7 +14,7 @@ public interface LoginMapper {
 	public UserDto selectUserByUserId(String userId);
 	public UserDto getloginDto(UserDto userDto);
 	//
-	UserDto passInformation(UserDto usersDto) throws Exception;
+	UserDto passInformation(UserDto userDto) throws Exception;
 	
 	List<UserDto> selectUserId(UserDto usersDto) throws Exception;
 	int userIdCheck(String userId) throws Exception;
@@ -23,4 +23,5 @@ public interface LoginMapper {
 	public void updatePassword(UserDto userDto);
 	//추가
 	public int selectHalted(String username);
+	public void insertSocialUser(UserDto dto);
 }

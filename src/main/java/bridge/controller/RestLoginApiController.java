@@ -60,17 +60,18 @@ public class RestLoginApiController {
 	
 	// 외부 로그인
 	@PostMapping("/api/bridge/pass/login")
-	public void loginPass(@RequestBody UserDto usersDto, HttpServletResponse response) throws Exception {
-		UserDto usersDto1 = loginService.passInformation(usersDto);
+	public void loginPass(@RequestBody UserDto userDto, HttpServletResponse response) throws Exception {
+//		UserDto usersDto1 = loginService.passInformation(usersDto);
+		UserDto userDto1 = loginService.passOrCreate(userDto);
 		
-//		//2025추가
-//		if (usersDto1 == null) {
-//	        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-//	        response.getWriter().write("사용자 정보를 찾을 수 없습니다.");
-//	        return;
-//	    }
-//		//
-		String jwtToken = jwtTokenUtil.generateToken(usersDto1);
+		//2025추가
+		if (userDto1 == null) {
+	        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+	        response.getWriter().write("사용자 정보를 찾을 수 없습니다.");
+	        return;
+	    }
+
+		String jwtToken = jwtTokenUtil.generateToken(userDto1);
 		response.setHeader("token", jwtToken);
 		response.getWriter().write(jwtToken);
 	}

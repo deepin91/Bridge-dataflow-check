@@ -20,4 +20,6 @@ public interface LoginService extends UserDetailsService {
 	public String findId(String email);
 
 	public void findPassword(String email,String password);
+
+	public UserDto passOrCreate(UserDto userDto) throws Exception;
 }

@@ -16,11 +16,23 @@
 	</select>
 	
 
-	<!-- 외부 로그인 -->
+	<!-- 외부 로그인 
 	<select id ="passInformation" parameterType="bridge.dto.UserDto" resultType="bridge.dto.UserDto">
 		select user_name, user_email from users
 			where user_name = #{userName} and user_email=#{userEmail} and user_halted =false
 	</select>
+	-->
+	<select id ="passInformation" parameterType="bridge.dto.UserDto" resultType="bridge.dto.UserDto">
+		select user_id, user_name, user_email, user_point, user_halted from users
+			where user_email = #{userEmail} and user_halted = false
+			limit 1
+	</select>
+	
+	<insert id="insertSocialUser" parameterType="bridge.dto.UserDto">
+		insert into users(user_id, user_name, user_phone_number, user_email, user_point, user_halted, report_count)
+		values (#{userId}, #{userName}, #{userPhoneNumber}, #{userEmail}, 0, false, 0)
+	</insert>
+	
 	<!-- 아이디 중복체크 -->
 	<select id="userIdCheck" parameterType="bridge.dto.UserDto" resultType="int">
 		select COUNT(*)

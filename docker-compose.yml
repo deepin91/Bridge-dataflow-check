@@ -30,21 +30,23 @@ services:
 
   springboot:
     build:
-      context: .
-      dockerfile: Dockerfile
+     context: .
+     dockerfile: Dockerfile
     container_name: springboot-container
     restart: always
     ports:
-      - "8080:8080"
+     - "8080:8080"
     depends_on:
-      mysql:
-        condition: service_healthy
-      redis:
-        condition: service_started
+     mysql:
+      condition: service_healthy
+     redis:
+      condition: service_started
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/musicdb
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: root
+      SPRING_DATA_REDIS_HOST: redis   # ✅ ADD
+      SPRING_DATA_REDIS_PORT: 6379    # ✅ ADD
     volumes:
       - ./files:/app/files
       # ✅ ADD: springboot 컨테이너에서 docker exec 사용하려면 필요
