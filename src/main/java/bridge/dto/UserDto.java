@@ -14,4 +14,5 @@ public class UserDto {
 	private int reportCount;
 
 	private String role; // "CLIENT" or "PRODUCER"
+	private String provider;
 }

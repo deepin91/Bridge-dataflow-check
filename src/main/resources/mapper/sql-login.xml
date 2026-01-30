@@ -22,6 +22,7 @@
 			where user_name = #{userName} and user_email=#{userEmail} and user_halted =false
 	</select>
 	-->
+	<!-- 네이버 간편가입 + 자동로그인 -->
 	<select id ="passInformation" parameterType="bridge.dto.UserDto" resultType="bridge.dto.UserDto">
 		select user_id, user_name, user_email, user_point, user_halted from users
 			where user_email = #{userEmail} and user_halted = false
@@ -29,8 +30,8 @@
 	</select>
 	
 	<insert id="insertSocialUser" parameterType="bridge.dto.UserDto">
-		insert into users(user_id, user_name, user_phone_number, user_email, user_point, user_halted, report_count)
-		values (#{userId}, #{userName}, #{userPhoneNumber}, #{userEmail}, 0, false, 0)
+		insert into users(user_id, user_name, user_phone_number, user_email, user_point, user_halted, report_count, provider)
+		values (#{userId}, #{userName}, #{userPhoneNumber}, #{userEmail}, 0, false, 0, #{provider})
 	</insert>
 	
 	<!-- 아이디 중복체크 -->

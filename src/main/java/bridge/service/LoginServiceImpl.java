@@ -89,20 +89,42 @@ public class LoginServiceImpl implements LoginService {
 	//
 //	@Override
 	public UserDto passOrCreate(UserDto dto) throws Exception{
-		UserDto found = loginMapper.passInformation(dto);
-		if(found != null) return found;
+	    // 카카오 - 간편가입 + 로그인
+	    if ("KAKAO".equalsIgnoreCase(dto.getProvider())) {
+	    	
+	    	UserDto found = loginMapper.selectUserByUserId(dto.getUserId());
+	    	if(found != null) return found;
+	    	// 카카오 최초 로그인 + 자동가입
+	    	dto.setProvider("KAKAO");
+	    	// -- 이메일, 핸드폰번호 null 허용으로 변경해서 가능
+	    	
+	    	loginMapper.insertSocialUser(dto);
+	        return loginMapper.selectUserByUserId(dto.getUserId());
+	    }
+
+	    // 네이버 - 간편가입 + 로그인
+	    if ("NAVER".equalsIgnoreCase(dto.getProvider())) {
+	    	
+	    	// 이메일로 기존 유저 조회
+	    	UserDto found = loginMapper.passInformation(dto);
+	    	if(found != null) return found;
 		
-		String newUserId = "naver_" + UUID.randomUUID().toString().replace("-", "").substring(0, 12);
-		dto.setUserId(newUserId);
+	    	// 자동가입
+	    	String newUserId = "naver_" + UUID.randomUUID().toString().replace("-", "").substring(0, 12);
+	    	dto.setUserId(newUserId);
+	    	dto.setProvider("NAVER");
 		
-//	    // ✅ ADD: phone 필수값 임시 세팅 (폰넘버 제공 ㄴㄴ라서)
-//	    if (dto.getUserPhoneNumber() == null || dto.getUserPhoneNumber().isBlank()) {
-//	        dto.setUserPhoneNumber("000-0000-0000");
-//	    }
+//	    	// ✅ ADD: phone 필수값 임시 세팅 (폰넘버 제공 ㄴㄴ라서)
+//	    	if (dto.getUserPhoneNumber() == null || dto.getUserPhoneNumber().isBlank()) {
+//	        	dto.setUserPhoneNumber("000-0000-0000");
+//	    	}
 		
-		loginMapper.insertSocialUser(dto);
-		
-		return loginMapper.passInformation(dto);
+	    	loginMapper.insertSocialUser(dto);
+	    	
+	    	return loginMapper.passInformation(dto);
+	    }
+	    
+	    return null;
 	}
 
 	@Override
